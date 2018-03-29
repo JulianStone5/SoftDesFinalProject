@@ -14,7 +14,7 @@ class Player(object):
         self.height = height
         self.width = width
         self.pos = pos
-        self.gravity = .1
+        self.gravity = .12
         self.vy = 0
         self.jump1 = False
         self.jump2 = False
@@ -64,13 +64,20 @@ class PyGameKeyboardController(object):
     def __init__(self,model):
         self.model = model
 
-    def handle_jump(self):
-        if not view.model.player.jump1:
-            view.model.player.vy = -8
-            view.model.player.jump1 = True
-        elif not view.model.player.jump2:
-            view.model.player.vy = -8
-            view.model.player.jump2 = True
+    def handle_jump(self,event):
+        if event.type != KEYDOWN:
+            return
+        if event.key == pygame.K_w or event.key == pygame.K_UP:
+            if not self.model.player.jump1:
+                self.model.player.vy = -8
+                self.model.player.jump1 = True
+                return
+            if not self.model.player.jump2:
+                self.model.player.vy = -8
+                self.model.player.jump2 = True
+                return
+        if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+            self.model.player.vy = 5
         return
 
     def handle_movement(self):
@@ -98,9 +105,7 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
-            if event.type == KEYDOWN and (event.key == pygame.K_UP or
-                                          event.key == pygame.K_w):
-                controller.handle_jump()
+            controller.handle_jump(event)
         controller.handle_movement()
         model.grav_effect()
         view.draw()
