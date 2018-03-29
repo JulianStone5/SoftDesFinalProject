@@ -14,6 +14,10 @@ class Player(object):
         self.height = height
         self.width = width
         self.pos = pos
+        self.gravity = .1
+        self.vy = 0
+        self.jump1 = False
+        self.jump2 = False
 
 class Model(object):
 
@@ -21,6 +25,16 @@ class Model(object):
         self.window_size = size
         self.player = player
         self.map = mmap
+
+    def grav_effect(self):
+        self.player.pos[1] += self.player.vy
+        self.player.vy += self.player.gravity
+        if self.player.pos[1] + self.player.height >= 851:
+            self.player.pos[1] = 851 - self.player.height
+            self.player.vy = 0
+            self.player.jump1 = False
+            self.player.jump2 = False
+
 
 class PyGameWindowView(object):
 
@@ -30,7 +44,7 @@ class PyGameWindowView(object):
 
     def draw(self):
         self.screen.fill(pygame.Color(0,0,0))
-        pygame.draw.rect(self.screen, # Draw note block
+        pygame.draw.rect(self.screen,
                          (0,255,0),
                          pygame.Rect(0,
                                      851,
@@ -50,6 +64,15 @@ class PyGameKeyboardController(object):
     def __init__(self,model):
         self.model = model
 
+    def handle_jump(self):
+        if not view.model.player.jump1:
+            view.model.player.vy = -8
+            view.model.player.jump1 = True
+        elif not view.model.player.jump2:
+            view.model.player.vy = -8
+            view.model.player.jump2 = True
+        return
+
     def handle_movement(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
@@ -58,8 +81,6 @@ class PyGameKeyboardController(object):
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.model.player.pos[0] += 5
             return
-            return
-        return
 
 if __name__ == '__main__':
     pygame.init()
@@ -67,7 +88,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player(170,85,[0,680])
+    player = Player(170,85,[0,681])
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -77,7 +98,11 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
+            if event.type == KEYDOWN and (event.key == pygame.K_UP or
+                                          event.key == pygame.K_w):
+                controller.handle_jump()
         controller.handle_movement()
+        model.grav_effect()
         view.draw()
         time.sleep(.001)
 
