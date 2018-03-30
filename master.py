@@ -41,7 +41,7 @@ class Map(pygame.sprite.Sprite):
                     85)
         #self.block_list = pygame.sprite.Group()
         self.blocks = [self.block1, self.block2,self.block3,self.block4,
-                      self.block5,self.block6,self.block7,self.block8]
+                      self.block5,self.block6,self.block7]
 
     def side_scroll(self,amount):
         for i in range(len(self.blocks)):
@@ -71,16 +71,56 @@ class Model(object):
         self.player = player
         self.map = mmap
 
-    def grav_effect(self):
-        self.player.hit_box.y += self.player.vy # pos[1]  to y becasue syntax
+    def collision(self):
+        """
+        For collision detection, we make a set of three points for each corner
+        of our player hitbox:
+
+        1-2-------3-4
+        -           -
+        5           6
+        -           -
+        -           -
+        -           -
+        7           8
+        -           -
+        9-10-----11-12
+
+        If certain combonations of these points intersect blocks on thee map,
+        it means that the player is hitting blocks at certain regions.
+        """
+        self.player.hit_box.y += self.player.vy # pos[1] to y becasue syntax
         self.player.vy += self.player.gravity
-        #if self.player.hit_box.y + self.player.height >= 851:
+        # Make all key points
+        p1 = self.player.hit_box.topleft
+        p4 = self.player.hit_box.topright
+        p9 = self.player.hit_box.bottomleft
+        p12 = self.player.hit_box.bottomright
+        p2 = (p1[0]+10,p1[1])
+        p3 = (p4[0]-10,p4[1])
+        p5 = (p1[0],p1[1]+10)
+        p6 = (p4[0],p4[1]+10)
+        p7 = (p9[0],p9[1]-10)
+        p8 = (p12[0],p12[1]-10)
+        p10 = (p9[0]+10,p9[1])
+        p11 = (p12[0]-10,p12[1])
         for i in self.map.blocks:
-            if self.player.hit_box.colliderect(i): # colition
-                self.player.hit_box.y = i.y - self.player.height
-                self.player.vy = 0
-                self.player.jump1 = False
-                self.player.jump2 = False
+            if self.player.hit_box.colliderect(i): # collision
+                if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
+                      (i.collidepoint(p11) and i.collidepoint(p12))):
+                    self.player.hit_box.y = i.y - self.player.height
+                    self.player.vy = 0
+                    self.player.jump1 = False
+                    self.player.jump2 = False
+                if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
+                    (i.collidepoint(p3) and i.collidepoint(p4))):
+                    self.player.hit_box.y = i.y + i.h
+                if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
+                      (i.collidepoint(p8) and i.collidepoint(p12))):
+                    self.player.hit_box.x = i.x - self.player.width
+                if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
+                      (i.collidepoint(p7) and i.collidepoint(p9))):
+                    self.player.hit_box.x = i.x + i.w
 
 
 class PyGameWindowView(object):
@@ -111,12 +151,12 @@ class PyGameKeyboardController(object):
         if not keys[pygame.K_w] and not keys[pygame.K_UP]:
             self.up_uncl = True # Verifies that the jump key has been unclicked
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            if self.model.player.hit_box.x < self.model.size[0]/4:
+            if self.model.player.hit_box.x < self.model.size[0]/5:
                 self.model.map.side_scroll(self.model.player.vx)
             else:
                 self.model.player.hit_box.x -= self.model.player.vx #change pos[0] to x because syntax
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            if self.model.player.hit_box.x > 3*self.model.size[0]/4:
+            if self.model.player.hit_box.x > 4*self.model.size[0]/5:
                 self.model.map.side_scroll(-1*self.model.player.vx)
             else:
                 self.model.player.hit_box.x += self.model.player.vx # same as above
@@ -138,7 +178,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player(170,85,[0,681])
+    player = Player(170,85,[0,680])
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -149,7 +189,7 @@ if __name__ == '__main__':
             if event.type == QUIT:
                 running = False
         controller.handle_movement()
-        model.grav_effect()
+        model.collision()
         view.draw()
         time.sleep(.001)
 
