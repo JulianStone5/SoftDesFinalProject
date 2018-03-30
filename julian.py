@@ -3,14 +3,45 @@ from pygame.locals import *
 import time
 import os
 
-class Map(object):
+class Map(pygame.sprite.Sprite):
 
     def __init__(self,size):
-        self.window_size = size
-        self.floor = pygame.Rect(0, # defines the floor postion and size
-                    851,
-                    1860,
-                    170)
+        #self.window_size = size
+        self.block1 = pygame.Rect(0,
+                    935,
+                    255,
+                    85)
+        self.block2 = pygame.Rect(255,
+                    765,
+                    170,
+                    255)
+        self.block3 = pygame.Rect(595,
+                    425,
+                    255,
+                    595)
+        self.block4 = pygame.Rect(850,
+                    595,
+                    340,
+                    425)
+        self.block5 = pygame.Rect(1190,
+                    510,
+                    255,
+                    510)
+        self.block6 = pygame.Rect(1275,
+                    680,
+                    170,
+                    340)
+        self.block7 = pygame.Rect(1445,
+                    595,
+                    255,
+                    425)
+        self.block8 = pygame.Rect(1700,
+                    935,
+                    1000,
+                    85)
+        #self.block_list = pygame.sprite.Group()
+        self.blocks = [self.block1, self.block2,self.block3,self.block4,
+                      self.block5,self.block6,self.block7,self.block8]
 class Player(object):
 
     def __init__(self,height,width,pos):
@@ -22,8 +53,9 @@ class Player(object):
                     self.pos[1],
                     self.width,
                     self.height)
-        self.gravity = .12
+        self.gravity = .165
         self.vy = 8
+        self.vx = 5
         self.jump1 = False
         self.jump2 = False
 
@@ -38,11 +70,12 @@ class Model(object):
         self.player.hit_box.y += self.player.vy # pos[1]  to y becasue syntax
         self.player.vy += self.player.gravity
         #if self.player.hit_box.y + self.player.height >= 851:
-        if self.player.hit_box.colliderect(self.map.floor): # colition
-            self.player.hit_box.y = self.map.floor.y - self.player.height
-            self.player.vy = 0
-            self.player.jump1 = False
-            self.player.jump2 = False
+        for i in self.map.blocks:
+            if self.player.hit_box.colliderect(i): # colition
+                self.player.hit_box.y = i.y - self.player.height
+                self.player.vy = 0
+                self.player.jump1 = False
+                self.player.jump2 = False
 
 
 class PyGameWindowView(object):
@@ -53,20 +86,12 @@ class PyGameWindowView(object):
 
     def draw(self):
         self.screen.fill(pygame.Color(0,0,0))
-        pygame.draw.rect(self.screen, #this  draws the block
-                         (0,255,0),
-                         self.model.map.floor) #
-                         # pygame.Rect(0,
-                         #             851,
-                         #             1860,
-                         #             170))
-        pygame.draw.rect(self.screen, #this draws the player
+        for i in self.model.map.blocks:
+            pygame.draw.rect(self.screen,
+                         (0,255,0), i)
+        pygame.draw.rect(self.screen,
                          (0,0,255),
-                         self.model.player.hit_box) # made short
-                         # pygame.Rect(self.model.player.pos[0],
-                         #             self.model.player.pos[1],
-                         #             self.model.player.width,
-                         #             self.model.player.height))
+                         self.model.player.hit_box)
         pygame.display.update()
 
 
@@ -81,9 +106,9 @@ class PyGameKeyboardController(object):
         if not keys[pygame.K_w] and not keys[pygame.K_UP]:
             self.up_uncl = True # Verifies that the jump key has been unclicked
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            self.model.player.hit_box.x -= 5 #change pos[0] to x because syntax
+            self.model.player.hit_box.x -= self.model.player.vx #change pos[0] to x because syntax
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            self.model.player.hit_box.x += 5 # same as above
+            self.model.player.hit_box.x += self.model.player.vx # same as above
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if not self.model.player.jump1 and self.up_uncl:
                 self.model.player.vy = -8 # Set up-velocity to initialize jump
