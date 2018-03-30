@@ -35,8 +35,18 @@ class Map(pygame.sprite.Sprite):
                     595,
                     255,
                     425)
+        self.block8 = pygame.Rect(1700,
+                    935,
+                    1000,
+                    85)
         #self.block_list = pygame.sprite.Group()
-        self.blocks = [self.block1, self.block2,self.block3,self.block4,self.block5,self.block6,self.block7]
+        self.blocks = [self.block1, self.block2,self.block3,self.block4,
+                      self.block5,self.block6,self.block7,self.block8]
+
+    def side_scroll(self,amount):
+        for i in range(len(self.blocks)):
+            self.blocks[i] = self.blocks[i].move(amount,0)
+
 class Player(object):
 
     def __init__(self,height,width,pos):
@@ -48,15 +58,16 @@ class Player(object):
                     self.pos[1],
                     self.width,
                     self.height)
-        self.gravity = .12
+        self.gravity = .165
         self.vy = 8
+        self.vx = 5
         self.jump1 = False
         self.jump2 = False
 
 class Model(object):
 
     def __init__(self,size,player,mmap):
-        self.window_size = size
+        self.size = size
         self.player = player
         self.map = mmap
 
@@ -100,9 +111,15 @@ class PyGameKeyboardController(object):
         if not keys[pygame.K_w] and not keys[pygame.K_UP]:
             self.up_uncl = True # Verifies that the jump key has been unclicked
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            self.model.player.hit_box.x -= 5 #change pos[0] to x because syntax
+            if self.model.player.hit_box.x < self.model.size[0]/4:
+                self.model.map.side_scroll(self.model.player.vx)
+            else:
+                self.model.player.hit_box.x -= self.model.player.vx #change pos[0] to x because syntax
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            self.model.player.hit_box.x += 5 # same as above
+            if self.model.player.hit_box.x > 3*self.model.size[0]/4:
+                self.model.map.side_scroll(-1*self.model.player.vx)
+            else:
+                self.model.player.hit_box.x += self.model.player.vx # same as above
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             if not self.model.player.jump1 and self.up_uncl:
                 self.model.player.vy = -8 # Set up-velocity to initialize jump
