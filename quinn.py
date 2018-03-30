@@ -3,14 +3,40 @@ from pygame.locals import *
 import time
 import os
 
-class Map(object):
+class Map(pygame.sprite.Sprite):
 
     def __init__(self,size):
-        self.window_size = size
-        self.floor = pygame.Rect(0, # defines the floor postion and size
-                    851,
-                    1860,
-                    170)
+        #self.window_size = size
+        self.block1 = pygame.Rect(0,
+                    935,
+                    255,
+                    85)
+        self.block2 = pygame.Rect(255,
+                    765,
+                    170,
+                    255)
+        self.block3 = pygame.Rect(595,
+                    425,
+                    255,
+                    595)
+        self.block4 = pygame.Rect(850,
+                    595,
+                    340,
+                    425)
+        self.block5 = pygame.Rect(1190,
+                    510,
+                    255,
+                    510)
+        self.block6 = pygame.Rect(1275,
+                    680,
+                    170,
+                    340)
+        self.block7 = pygame.Rect(1445,
+                    595,
+                    255,
+                    425)
+        #self.block_list = pygame.sprite.Group()
+        self.blocks = [self.block1, self.block2,self.block3,self.block4,self.block5,self.block6,self.block7]
 class Player(object):
 
     def __init__(self,height,width,pos):
@@ -38,11 +64,12 @@ class Model(object):
         self.player.hit_box.y += self.player.vy # pos[1]  to y becasue syntax
         self.player.vy += self.player.gravity
         #if self.player.hit_box.y + self.player.height >= 851:
-        if self.player.hit_box.colliderect(self.map.floor): # colition
-            self.player.hit_box.y = self.map.floor.y - self.player.height
-            self.player.vy = 0
-            self.player.jump1 = False
-            self.player.jump2 = False
+        for i in self.map.blocks:
+            if self.player.hit_box.colliderect(i): # colition
+                self.player.hit_box.y = i.y - self.player.height
+                self.player.vy = 0
+                self.player.jump1 = False
+                self.player.jump2 = False
 
 
 class PyGameWindowView(object):
@@ -53,51 +80,12 @@ class PyGameWindowView(object):
 
     def draw(self):
         self.screen.fill(pygame.Color(0,0,0))
+        for i in self.model.map.blocks:
+            pygame.draw.rect(self.screen,
+                         (0,255,0), i)
         pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(0,
-                                     935,
-                                     255,
-                                     85))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(255,
-                                     765,
-                                     170,
-                                     255))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(595,
-                                     425,
-                                     255,
-                                     595))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(850,
-                                     595,
-                                     340,
-                                     425))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(1190,
-                                     510,
-                                     255,
-                                     510))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(1275,
-                                     680,
-                                     170,
-                                     340))
-        pygame.draw.rect(self.screen,
-                         (0,255,0),
-                         pygame.Rect(1445,
-                                     595,
-                                     255,
-                                     425))
-        pygame.draw.rect(self.screen, #this draws the player
                          (0,0,255),
-                         self.model.player.hit_box) # made short
+                         self.model.player.hit_box)
         pygame.display.update()
 
 
@@ -105,33 +93,27 @@ class PyGameKeyboardController(object):
 
     def __init__(self,model):
         self.model = model
-
-    def handle_jump(self,event):
-        if event.type != KEYDOWN:
-            return
-        if event.key == pygame.K_w or event.key == pygame.K_UP:
-            if not self.model.player.jump1:
-                self.model.player.vy = -8
-                #self.model.player.hit_box.y += self.model.player.vy
-                self.model.player.jump1 = True
-                return
-            if not self.model.player.jump2:
-                self.model.player.vy = -8
-                #self.model.player.hit_box.y += self.model.player.vy
-                self.model.player.jump2 = True
-                return
-        if event.key == pygame.K_s or event.key == pygame.K_DOWN:
-            self.model.player.vy = 5
-        return
+        self.up_uncl = True # Ensures double jump only after key is released between jumps
 
     def handle_movement(self):
         keys = pygame.key.get_pressed()
+        if not keys[pygame.K_w] and not keys[pygame.K_UP]:
+            self.up_uncl = True # Verifies that the jump key has been unclicked
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
             self.model.player.hit_box.x -= 5 #change pos[0] to x because syntax
-            return
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.model.player.hit_box.x += 5 # same as above
-            return
+        if keys[pygame.K_w] or keys[pygame.K_UP]:
+            if not self.model.player.jump1 and self.up_uncl:
+                self.model.player.vy = -8 # Set up-velocity to initialize jump
+                self.model.player.jump1 = True # Mark first jump
+                self.up_uncl = False # Say that the jump key has been clicked
+            elif not self.model.player.jump2 and self.up_uncl:
+                self.model.player.vy = -8
+                self.model.player.jump2 = True # Mark second jump
+                self.up_uncl = False
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+            self.model.player.vy = 5 # Move player down
 
 if __name__ == '__main__':
     pygame.init()
@@ -149,10 +131,11 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
-            controller.handle_jump(event)
         controller.handle_movement()
         model.grav_effect()
         view.draw()
         time.sleep(.001)
+
+    pygame.quit()
 
     pygame.quit()
