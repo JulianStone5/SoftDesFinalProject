@@ -91,6 +91,8 @@ class Model(object):
         """
         self.player.hit_box.y += self.player.vy # pos[1] to y becasue syntax
         self.player.vy += self.player.gravity
+        if self.player.vy > 10:
+            self.player.vy = 10
         # Make all key points
         p1 = self.player.hit_box.topleft
         p4 = self.player.hit_box.topright
