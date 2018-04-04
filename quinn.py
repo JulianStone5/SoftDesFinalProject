@@ -6,25 +6,58 @@ import os
 class Map(pygame.sprite.Sprite):
 
     def __init__(self,size):
-        #self.window_size = size
-        self.block1 = pygame.Rect(0,935,320,85)
-        self.block2 = pygame.Rect(320,765,255,255)
-        self.block3 = pygame.Rect(575,425,255,595)
-        self.block4 = pygame.Rect(1085,425,600,595)
-        self.block5 = pygame.Rect(1685,620,700,400)
-        self.block6 = pygame.Rect(2385,425,600,595)
-        self.block7 = pygame.Rect(2985,50,255,970)
-        self.block8 = pygame.Rect(1700,
-                    935,
-                    1000,
-                    85)
-        #self.block_list = pygame.sprite.Group()
-        self.blocks = [self.block1, self.block2,self.block3,self.block4,
-                      self.block5,self.block6,self.block7]
+        self.size = size
+        self.death_box = pygame.Rect(-1000,self.size[1],10000,50)
+        self.starter_block = pygame.Rect(0,935,320,85)
+        self.blocks = [self.death_box,self.starter_block]
+        self.add_small_block()
+        self.add_block()
+        self.add_chasm()
+        self.add_block()
+        self.add_block()
+        self.add_small_block()
+        self.add_small_block()
+        self.add_block()
+        self.add_tall_block()
+        self.add_tall_block()
+        self.add_block()
 
     def side_scroll(self,amount):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
+
+    def add_small_block(self,width=250,height=250):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + last_block.h - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_block(self,width=250,height=500):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + last_block.h - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_tall_block(self,width=250,height=700):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + last_block.h - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_chasm(self,width=255,height=50):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        block = pygame.Rect(x,self.size[1]+50,width,height)
+        self.blocks.append(block)
 
 class Player(object):
 
@@ -49,6 +82,7 @@ class Model(object):
         self.size = size
         self.player = player
         self.map = mmap
+        self.game_over = False
 
     def collision(self):
         """
@@ -77,22 +111,28 @@ class Model(object):
         p4 = self.player.hit_box.topright
         p9 = self.player.hit_box.bottomleft
         p12 = self.player.hit_box.bottomright
-        p2 = (p1[0]+10,p1[1])
-        p3 = (p4[0]-10,p4[1])
-        p5 = (p1[0],p1[1]+10)
-        p6 = (p4[0],p4[1]+10)
-        p7 = (p9[0],p9[1]-10)
-        p8 = (p12[0],p12[1]-10)
-        p10 = (p9[0]+10,p9[1])
-        p11 = (p12[0]-10,p12[1])
-        for i in self.map.blocks:
+        p2 = (p1[0]+11,p1[1])
+        p3 = (p4[0]-11,p4[1])
+        p5 = (p1[0],p1[1]+11)
+        p6 = (p4[0],p4[1]+11)
+        p7 = (p9[0],p9[1]-11)
+        p8 = (p12[0],p12[1]-11)
+        p10 = (p9[0]+11,p9[1])
+        p11 = (p12[0]-11,p12[1])
+        for a in range(len(self.map.blocks)):
+            i = self.map.blocks[a]
             if self.player.hit_box.colliderect(i): # collision
+                if a == 0:
+                    self.game_over = True
+                    self.player.hit_box.y = i.y
+                    break
                 if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
-                      (i.collidepoint(p11) and i.collidepoint(p12))):
-                    self.player.hit_box.y = i.y - self.player.height
-                    self.player.vy = 0
-                    self.player.jump1 = False
-                    self.player.jump2 = False
+                    (i.collidepoint(p11) and i.collidepoint(p12))):
+                    if self.player.vy > 0:
+                        self.player.hit_box.y = i.y - self.player.height
+                        self.player.vy = 0
+                        self.player.jump1 = False
+                        self.player.jump2 = False
                 if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
                     (i.collidepoint(p3) and i.collidepoint(p4))):
                     self.player.hit_box.y = i.y + i.h
@@ -118,6 +158,12 @@ class PyGameWindowView(object):
         pygame.draw.rect(self.screen,
                          (0,0,255),
                          self.model.player.hit_box)
+        if self.model.game_over:
+            game_over_font = pygame.font.Font("freesansbold.ttf",50)
+            game_over = game_over_font.render("GAME OVER",True,(255,0,0))
+            restart = game_over_font.render('PRESS "SPACE" TO RESTART',True,(255,0,0))
+            self.screen.blit(game_over, (size[0]//2-game_over.get_width()//2, size[1]//2-game_over.get_height()))
+            self.screen.blit(restart, (size[0]//2-restart.get_width()//2, size[1]//2))
         pygame.display.update()
 
 
@@ -169,8 +215,15 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
-        controller.handle_movement()
-        model.collision()
+            if model.game_over and event.type == KEYDOWN and event.key == pygame.K_SPACE:
+                mmap = Map(size)
+                player = Player(170,85,[0,680])
+                model = Model(size,player,mmap)
+                view = PyGameWindowView(size,model)
+                controller = PyGameKeyboardController(model)
+        if not model.game_over:
+            controller.handle_movement()
+            model.collision()
         view.draw()
         time.sleep(.001)
 
