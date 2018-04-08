@@ -71,6 +71,50 @@ class Player(object):
         self.vx = 5
         self.jump1 = False
         self.jump2 = False
+        self.is_main = True
+
+    def collision(self,mmap,game_over):
+        self.hit_box.y += self.vy # pos[1] to y becasue syntax
+        self.vy += self.gravity
+        if self.vy > 10:
+            self.vy = 10
+        if game_over:
+            return True
+        # Make all key points
+        p1 = self.hit_box.topleft
+        p4 = self.hit_box.topright
+        p9 = self.hit_box.bottomleft
+        p12 = self.hit_box.bottomright
+        p2 = (p1[0]+11,p1[1])
+        p3 = (p4[0]-11,p4[1])
+        p5 = (p1[0],p1[1]+11)
+        p6 = (p4[0],p4[1]+11)
+        p7 = (p9[0],p9[1]-11)
+        p8 = (p12[0],p12[1]-11)
+        p10 = (p9[0]+11,p9[1])
+        p11 = (p12[0]-11,p12[1])
+        for a in range(len(mmap.blocks)):
+            i = mmap.blocks[a]
+            if self.hit_box.colliderect(i) and not game_over: # collision
+                if a == 0 and self.is_main:
+                    return True
+                if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
+                    (i.collidepoint(p11) and i.collidepoint(p12))):
+                    if self.vy > 0:
+                        self.hit_box.y = i.y - self.height
+                        self.vy = 0
+                        self.jump1 = False
+                        self.jump2 = False
+                if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
+                    (i.collidepoint(p3) and i.collidepoint(p4))):
+                    self.hit_box.y = i.y + i.h
+                if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
+                    (i.collidepoint(p8) and i.collidepoint(p12))):
+                    self.hit_box.x = i.x - self.width
+                if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
+                    (i.collidepoint(p7) and i.collidepoint(p9))):
+                    self.hit_box.x = i.x + i.w
+        return False
 
 class Model(object):
 
@@ -98,46 +142,7 @@ class Model(object):
         If certain combonations of these points intersect blocks on thee map,
         it means that the player is hitting blocks at certain regions.
         """
-        self.player.hit_box.y += self.player.vy # pos[1] to y becasue syntax
-        self.player.vy += self.player.gravity
-        if self.player.vy > 10:
-            self.player.vy = 10
-        # Make all key points
-        p1 = self.player.hit_box.topleft
-        p4 = self.player.hit_box.topright
-        p9 = self.player.hit_box.bottomleft
-        p12 = self.player.hit_box.bottomright
-        p2 = (p1[0]+11,p1[1])
-        p3 = (p4[0]-11,p4[1])
-        p5 = (p1[0],p1[1]+11)
-        p6 = (p4[0],p4[1]+11)
-        p7 = (p9[0],p9[1]-11)
-        p8 = (p12[0],p12[1]-11)
-        p10 = (p9[0]+11,p9[1])
-        p11 = (p12[0]-11,p12[1])
-        for a in range(len(self.map.blocks)):
-            i = self.map.blocks[a]
-            if self.player.hit_box.colliderect(i) and not self.game_over: # collision
-                if a == 0:
-                    self.game_over = True
-                    break
-                if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
-                    (i.collidepoint(p11) and i.collidepoint(p12))):
-                    if self.player.vy > 0:
-                        self.player.hit_box.y = i.y - self.player.height
-                        self.player.vy = 0
-                        self.player.jump1 = False
-                        self.player.jump2 = False
-                if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
-                    (i.collidepoint(p3) and i.collidepoint(p4))):
-                    self.player.hit_box.y = i.y + i.h
-                if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
-                    (i.collidepoint(p8) and i.collidepoint(p12))):
-                    self.player.hit_box.x = i.x - self.player.width
-                if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
-                    (i.collidepoint(p7) and i.collidepoint(p9))):
-                    self.player.hit_box.x = i.x + i.w
-
+        self.game_over = self.player.collision(self.map,self.game_over)
         for a in range(len(self.map.obstacles)):
             i = self.map.obstacles[a]
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
