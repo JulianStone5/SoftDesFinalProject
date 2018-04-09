@@ -17,6 +17,7 @@ class Map(pygame.sprite.Sprite):
         self.add_chasm()
         self.add_block(600,595)
         self.add_block(700,400)
+        self.add_roller(self.blocks[6].x+100,self.blocks[6].y-85)
         self.add_block(600,595)
         self.add_block(255,970)
 
@@ -24,6 +25,7 @@ class Map(pygame.sprite.Sprite):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
         for i in range(len(self.obstacles)):
+            #if self.obstacles[i].type != 'roller':
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(amount,0)
 
     def add_block(self,width=350,height=500):
@@ -42,22 +44,20 @@ class Map(pygame.sprite.Sprite):
         self.blocks.append(block)
 
     def add_spikes(self,x,y,width=85,height=30):
-        spikes = Obstacle(x,y,width,height,'spikes')
+        spikes = Obstacle(width,height,(x,y),'spikes')
         self.obstacles.append(spikes)
 
     def add_spring(self,x,y,width=85,height=30):
-        spring = Obstacle(x,y,width,height,'spring')
+        spring = Obstacle((x,y),width,height,'spring')
         self.obstacles.append(spring)
 
-class Obstacle(object):
-
-    def __init__(self,x,y,width,height,ty):
-        self.hit_box = pygame.Rect(x,y,width,height)
-        self.type = ty
+    def add_roller(self,x,y,width=85,height=85):
+        roller = Obstacle((x,y),width,height,'roller')
+        self.obstacles.append(roller)
 
 class Player(object):
 
-    def __init__(self,height,width,pos):
+    def __init__(self,pos,width,height,is_main=True):
         self.height = height
         self.width = width
         self.pos = pos
@@ -71,11 +71,34 @@ class Player(object):
         self.vx = 5
         self.jump1 = False
         self.jump2 = False
-        self.is_main = True
+        self.is_main = is_main
 
     def collision(self,mmap,game_over):
+        """
+        For collision detection, we make a set of three points for each corner
+        of our player hitbox:
+
+        1-2-------3-4
+        -           -
+        5           6
+        -           -
+        -           -
+        -           -
+        7           8
+        -           -
+        9-10-----11-12
+
+        If certain combonations of these points intersect blocks on thee map,
+        it means that the player is hitting blocks at certain regions.
+        """
+        if game_over and not self.is_main:
+            self.gravity = 0
+            self.vy = 0
+            self.vx = 0
         self.hit_box.y += self.vy # pos[1] to y becasue syntax
         self.vy += self.gravity
+        if not self.is_main:
+            self.hit_box = self.hit_box.move(self.vx,0)
         if self.vy > 10:
             self.vy = 10
         if game_over:
@@ -111,10 +134,24 @@ class Player(object):
                 if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
                     (i.collidepoint(p8) and i.collidepoint(p12))):
                     self.hit_box.x = i.x - self.width
+                    if not self.is_main:
+                        self.vx *= -1
                 if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
                     (i.collidepoint(p7) and i.collidepoint(p9))):
                     self.hit_box.x = i.x + i.w
+                    if not self.is_main:
+                        self.vx *= -1
         return False
+
+class Obstacle(Player):
+
+    def __init__(self,pos,width,height,ty):
+        super(Obstacle,self).__init__(pos,width,height,False)
+        self.type = ty
+        if self.type != 'roller':
+            self.vx = 0
+        else:
+            self.vx = 3
 
 class Model(object):
 
@@ -125,28 +162,13 @@ class Model(object):
         self.game_over = False
 
     def collision(self):
-        """
-        For collision detection, we make a set of three points for each corner
-        of our player hitbox:
-
-        1-2-------3-4
-        -           -
-        5           6
-        -           -
-        -           -
-        -           -
-        7           8
-        -           -
-        9-10-----11-12
-
-        If certain combonations of these points intersect blocks on thee map,
-        it means that the player is hitting blocks at certain regions.
-        """
         self.game_over = self.player.collision(self.map,self.game_over)
-        for a in range(len(self.map.obstacles)):
-            i = self.map.obstacles[a]
+        for i in self.map.obstacles:
+            i.collision(self.map,self.game_over)
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
-                if i.type == 'spikes':
+                self.player.jump1 = False
+                self.player.jump2 = False
+                if i.type == 'spikes' or i.type == 'roller':
                     self.game_over = True
                     break
                 if i.type == 'spring':
@@ -169,6 +191,8 @@ class PyGameWindowView(object):
                 pygame.draw.rect(self.screen,(160,160,160),i.hit_box)
             if i.type == 'spring':
                 pygame.draw.rect(self.screen,(255,0,0),i.hit_box)
+            if i.type == 'roller':
+                pygame.draw.rect(self.screen,(255,0,255),i.hit_box)
         pygame.draw.rect(self.screen,(0,0,255),self.model.player.hit_box)
         if self.model.game_over:
             game_over_font = pygame.font.Font("freesansbold.ttf",50)
@@ -217,7 +241,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player(170,85,[0,680])
+    player = Player((0,680),85,170)
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -229,7 +253,7 @@ if __name__ == '__main__':
                 running = False
             if model.game_over and event.type == KEYDOWN and event.key == pygame.K_SPACE:
                 mmap = Map(size)
-                player = Player(170,85,[0,680])
+                player = Player((0,680),85,170)
                 model = Model(size,player,mmap)
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
