@@ -18,15 +18,49 @@ class Map(pygame.sprite.Sprite):
         self.add_small_block()
         self.add_small_block()
         self.add_block()
+        self.add_thin_block()
         self.add_tall_block()
         self.add_tall_block()
         self.add_block()
+        self.add_block()
+        self.add_chasm()
+        self.add_chasm()
+        self.add_block()
+        self.add_thin_block()
+        self.add_block()
+        self.add_small_block()
+        self.add_smaller_block()
+        self.add_box()
+        self.add_box()
+        self.add_box()
+        self.add_box()
+        self.add_down_box()
+        self.add_down_box()
+
 
     def side_scroll(self,amount):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
 
     def add_small_block(self,width=250,height=250):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + last_block.h - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_smaller_block(self,width=250,height=125):
+        last_block = self.blocks[len(self.blocks)-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + last_block.h - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_thin_block(self, width=125, height=500):
         last_block = self.blocks[len(self.blocks)-1]
         x = last_block.x + last_block.w
         y = last_block.y + last_block.h - height
@@ -57,6 +91,31 @@ class Map(pygame.sprite.Sprite):
         last_block = self.blocks[len(self.blocks)-1]
         x = last_block.x + last_block.w
         block = pygame.Rect(x,self.size[1]+50,width,height)
+        self.blocks.append(block)
+
+    def add_box(self,width=200,height=50):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        y = last_block.y - 150 - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_down_box(self,width=200,height=50):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        y = last_block.y + 150 - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_last_box(self,width=250,height=510):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        y = 510
+        block = pygame.Rect(x,y,width,height)
         self.blocks.append(block)
 
 class Player(object):
