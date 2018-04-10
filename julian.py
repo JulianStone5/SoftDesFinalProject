@@ -142,6 +142,22 @@ class Player(object):
             self.jump1 = False
             self.jump2 = False
 
+    def right_collision(self,i,p4,p6,p8,p12,p15,p16):
+        if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
+            (i.collidepoint(p8) and i.collidepoint(p12)) or
+            i.collidepoint(p15) or i.collidepoint(p16)):
+            self.hit_box.x = i.x - self.width
+            if not self.is_main:
+                self.vx *= -1
+
+    def left_collision(self,i,p1,p5,p7,p9,p13,p14):
+        if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
+            (i.collidepoint(p7) and i.collidepoint(p9)) or
+            i.collidepoint(p13) or i.collidepoint(p14)):
+            self.hit_box.x = i.x + i.w
+            if not self.is_main:
+                self.vx *= -1
+
     def collision(self,mmap,game_over):
         """
         For collision detection, we make a set of three points for each corner
@@ -199,18 +215,8 @@ class Player(object):
                     return True
                 self.top_collision(i,p1,p2,p3,p4)
                 self.bottom_collision(i,p9,p10,p11,p12)
-                if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
-                    (i.collidepoint(p8) and i.collidepoint(p12)) or
-                    i.collidepoint(p15) or i.collidepoint(p16)):
-                    self.hit_box.x = i.x - self.width
-                    if not self.is_main:
-                        self.vx *= -1
-                if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
-                    (i.collidepoint(p7) and i.collidepoint(p9)) or
-                    i.collidepoint(p13) or i.collidepoint(p14)):
-                    self.hit_box.x = i.x + i.w
-                    if not self.is_main:
-                        self.vx *= -1
+                self.right_collision(i,p4,p6,p8,p12,p15,p16)
+                self.left_collision(i,p1,p5,p7,p9,p13,p14)
         return False
 
 class Obstacle(Player):
