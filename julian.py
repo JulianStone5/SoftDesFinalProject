@@ -270,6 +270,12 @@ class Model(object):
         if self.player.hit_box.y < self.size[1]/8 and self.player.vy < 0:
             vscroll = True
             self.map.vert_scroll(-1*self.player.vy)
+        elif self.player.hit_box.y+self.player.hit_box.h > self.size[1]*7/8 and self.player.vy > 0:
+            if self.map.blocks[0].y > self.size[1]:
+                vscroll = True
+                self.map.vert_scroll(-1*self.player.vy)
+            else:
+                self.map.vert_scroll(self.size[1]-self.map.blocks[0].y)
         self.game_over = self.player.collision(self.map,self.game_over,vscroll)
         for i in self.map.obstacles:
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
