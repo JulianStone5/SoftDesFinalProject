@@ -13,7 +13,7 @@ class Map(pygame.sprite.Sprite):
         self.obstacles = []
         self.enemies = []
         self.add_small_block()
-        self.add_spring(self.blocks[-1].x+90,self.blocks[-1].y-30)
+        #self.add_spring(self.blocks[-1].x+90,self.blocks[-1].y-30)
         self.add_block()
         self.add_chasm()
         self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175)
@@ -50,6 +50,14 @@ class Map(pygame.sprite.Sprite):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(amount,0)
         for i in range(len(self.enemies)):
             self.enemies[i].hit_box = self.enemies[i].hit_box.move(amount,0)
+
+    def vert_scroll(self,amount):
+        for i in range(len(self.blocks)):
+            self.blocks[i] = self.blocks[i].move(0,amount)
+        for i in range(len(self.obstacles)):
+            self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(0,amount)
+        for i in range(len(self.enemies)):
+            self.enemies[i].hit_box = self.enemies[i].hit_box.move(0,amount)
 
     def add_block(self,width=250,height=500):
         last_block = self.blocks[-1]
@@ -164,7 +172,7 @@ class Player(object):
             if not self.is_main:
                 self.vx *= -1
 
-    def collision(self,mmap,game_over):
+    def collision(self,mmap,game_over,vscroll=False):
         """
         For collision detection, we make a set of three points for each corner
         of our player hitbox:
@@ -190,7 +198,8 @@ class Player(object):
             self.gravity = 0
             self.vy = 0
             self.vx = 0
-        self.hit_box.y += self.vy # pos[1] to y becasue syntax
+        if not vscroll:
+            self.hit_box.y += self.vy # pos[1] to y becasue syntax
         self.vy += self.gravity
         if not self.is_main:
             self.hit_box = self.hit_box.move(self.vx,0) #So enemies can move without keypress
@@ -257,7 +266,12 @@ class Model(object):
         self.game_over = False
 
     def collision(self):
-        self.game_over = self.player.collision(self.map,self.game_over)
+        vscroll = False
+        if self.player.hit_box.y < self.size[1]/8:
+            vscroll = True
+            self.map.vert_scroll(-1*self.player.vy)
+            print(self.player.vy)
+        self.game_over = self.player.collision(self.map,self.game_over,vscroll)
         for i in self.map.obstacles:
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
                 self.player.jump1 = False
