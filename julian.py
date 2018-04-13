@@ -11,12 +11,16 @@ class Map(pygame.sprite.Sprite):
         self.starter_block = pygame.Rect(0,935,320,85)
         self.blocks = [self.death_box,self.starter_block]
         self.obstacles = []
+        self.enemies = []
         self.add_small_block()
+        self.add_spring(self.blocks[-1].x+90,self.blocks[-1].y-30)
         self.add_block()
         self.add_chasm()
+        self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175)
         self.add_block()
         self.add_block()
         self.add_small_block()
+        self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
         self.add_small_block()
         self.add_block()
         self.add_thin_block()
@@ -31,12 +35,12 @@ class Map(pygame.sprite.Sprite):
         self.add_block()
         self.add_small_block()
         self.add_smaller_block()
-        self.add_box()
-        self.add_box()
-        self.add_box()
-        self.add_box()
-        self.add_down_box()
-        self.add_down_box()
+        self.add_floating_up_block()
+        self.add_floating_up_block()
+        self.add_floating_up_block()
+        self.add_floating_up_block()
+        self.add_floating_down_block()
+        self.add_floating_down_block()
 
 
     def side_scroll(self,amount):
@@ -44,10 +48,11 @@ class Map(pygame.sprite.Sprite):
             self.blocks[i] = self.blocks[i].move(amount,0)
         for i in range(len(self.obstacles)):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(amount,0)
-
+        for i in range(len(self.enemies)):
+            self.enemies[i].hit_box = self.enemies[i].hit_box.move(amount,0)
 
     def add_block(self,width=250,height=500):
-        last_block = self.blocks[len(self.blocks)-1]
+        last_block = self.blocks[-1]
         x = last_block.x + last_block.w
         y = last_block.y + last_block.h - height
         if last_block.y > self.size[1]:
@@ -68,12 +73,12 @@ class Map(pygame.sprite.Sprite):
         self.add_block(width,height)
 
     def add_chasm(self,width=255,height=50):
-        last_block = self.blocks[len(self.blocks)-1]
+        last_block = self.blocks[-1]
         x = last_block.x + last_block.w
         block = pygame.Rect(x,self.size[1]+50,width,height)
         self.blocks.append(block)
 
-    def add_box(self,width=200,height=60):
+    def add_floating_up_block(self,width=200,height=60):
         last_block = self.blocks[-1]
         x = last_block.x + last_block.w
         y = last_block.y - 100 - height
@@ -82,7 +87,7 @@ class Map(pygame.sprite.Sprite):
         block = pygame.Rect(x,y,width,height)
         self.blocks.append(block)
 
-    def add_down_box(self,width=200,height=60):
+    def add_floating_down_block(self,width=200,height=60):
         last_block = self.blocks[-1]
         x = last_block.x + last_block.w
         y = last_block.y + 150 - height
@@ -103,28 +108,26 @@ class Map(pygame.sprite.Sprite):
         self.obstacles.append(spikes)
 
     def add_spring(self,x,y,width=85,height=30):
-        spring = Obstacle((x,y),width,height,'spring')
+        spring = Obstacle(x,y,width,height,'spring')
         self.obstacles.append(spring)
 
-    def add_roller(self,x,y,width=85,height=85):
-        roller = Obstacle((x,y),width,height,'roller')
-        self.obstacles.append(roller)
+    def add_basic_enemy(self,x,y,width=85,height=125):
+        enemy = Enemy(x,y,width,height,'basic')
+        self.enemies.append(enemy)
+
+    def add_jump_enemy(self,x,y,width=85,height=125):
+        enemy = Enemy(x,y,width,height,'jump')
+        self.enemies.append(enemy)
 
 class Player(object):
 
-    def __init__(self,pos,width,height,is_main=True):
-        self.height = height
-        self.width = width
-        self.pos = pos
+    def __init__(self,x,y,width,height,is_main=True):
         #define players pos and demision so rep as Rectangle and colltion and draw are easy
-        self.hit_box = pygame.Rect(self.pos[0],
-                    self.pos[1],
-                    self.width,
-                    self.height)
+        self.hit_box = pygame.Rect(x,y,width,height)
         self.gravity = .165
         self.vy = 8
         self.vx = 4
-        self.jump1 = False
+        self.jump1 = False #setting up for double jumps
         self.jump2 = False
         self.is_main = is_main
 
@@ -137,8 +140,11 @@ class Player(object):
     def bottom_collision(self,i,p9,p10,p11,p12):
         if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
             (i.collidepoint(p11) and i.collidepoint(p12)) and self.vy > 0):
-            self.hit_box.y = i.y - self.height
+            self.hit_box.y = i.y - self.hit_box.h
             self.vy = 0
+            if not self.is_main:
+                if self.type == 'jump':
+                    self.vy = -18
             self.jump1 = False
             self.jump2 = False
 
@@ -146,7 +152,7 @@ class Player(object):
         if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
             (i.collidepoint(p8) and i.collidepoint(p12)) or
             i.collidepoint(p15) or i.collidepoint(p16)):
-            self.hit_box.x = i.x - self.width
+            self.hit_box.x = i.x - self.hit_box.w
             if not self.is_main:
                 self.vx *= -1
 
@@ -175,18 +181,22 @@ class Player(object):
 
         If certain combonations of these points intersect blocks on thee map,
         it means that the player is hitting blocks at certain regions.
+
+        This will update the positions of players, enemies, and obstacles based
+        on collision detection and it will return whether the game is over after
+        the sets of collisions are found.
         """
-        if game_over and not self.is_main:
+        if game_over and not self.is_main: #Stop enemies when game ends
             self.gravity = 0
             self.vy = 0
             self.vx = 0
         self.hit_box.y += self.vy # pos[1] to y becasue syntax
         self.vy += self.gravity
         if not self.is_main:
-            self.hit_box = self.hit_box.move(self.vx,0)
-        if self.vy > 10:
+            self.hit_box = self.hit_box.move(self.vx,0) #So enemies can move without keypress
+        if self.vy > 10: #Terminal velocity
             self.vy = 10
-        if game_over:
+        if game_over: #Stops collision detection for player when game is over
             self.jump1 = True
             self.jump2 = True
             self.vx = 0
@@ -211,7 +221,7 @@ class Player(object):
         for a in range(len(mmap.blocks)):
             i = mmap.blocks[a]
             if self.hit_box.colliderect(i) and not game_over: # collision
-                if a == 0 and self.is_main:
+                if a == 0 and self.is_main: # If player falls off screen
                     return True
                 self.top_collision(i,p1,p2,p3,p4)
                 self.bottom_collision(i,p9,p10,p11,p12)
@@ -221,13 +231,22 @@ class Player(object):
 
 class Obstacle(Player):
 
-    def __init__(self,pos,width,height,ty):
-        super(Obstacle,self).__init__(pos,width,height,False)
+    def __init__(self,x,y,width,height,ty):
+        self.hit_box = pygame.Rect(x,y,width,height)
+        self.is_main = False
         self.type = ty
-        if self.type != 'roller':
+        self.vx = 0
+        self.vy = 0
+
+class Enemy(Player):
+    def __init__(self,x,y,width,height,ty=''):
+        super(Enemy,self).__init__(x,y,width,height,False)
+        self.type = ty
+        if self.type == 'jump':
             self.vx = 0
+            self.vy = -18
         else:
-            self.vx = 3
+            self.vx = 4
 
 class Model(object):
 
@@ -240,16 +259,20 @@ class Model(object):
     def collision(self):
         self.game_over = self.player.collision(self.map,self.game_over)
         for i in self.map.obstacles:
-            i.collision(self.map,self.game_over)
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
                 self.player.jump1 = False
                 self.player.jump2 = False
-                if i.type == 'spikes' or i.type == 'roller':
+                if i.type == 'spikes':
                     self.game_over = True
                     break
                 if i.type == 'spring':
-                    self.player.jump1 = True
+                    self.player.jump1 = True # removes first jump
                     self.player.vy = -12
+        for i in self.map.enemies:
+            i.collision(self.map,self.game_over)
+            if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
+                self.game_over = True
+                break
 
 
 class PyGameWindowView(object):
@@ -267,8 +290,8 @@ class PyGameWindowView(object):
                 pygame.draw.rect(self.screen,(160,160,160),i.hit_box)
             if i.type == 'spring':
                 pygame.draw.rect(self.screen,(255,0,0),i.hit_box)
-            if i.type == 'roller':
-                pygame.draw.rect(self.screen,(255,0,255),i.hit_box)
+        for i in self.model.map.enemies:
+            pygame.draw.rect(self.screen,(255,255,255), i.hit_box)
         pygame.draw.rect(self.screen,(0,0,255),self.model.player.hit_box)
         if self.model.game_over:
             game_over_font = pygame.font.Font("freesansbold.ttf",50)
@@ -318,7 +341,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player((0,680),85,170)
+    player = Player(0,680,85,170)
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -330,7 +353,7 @@ if __name__ == '__main__':
                 running = False
             if model.game_over and event.type == KEYDOWN and event.key == pygame.K_SPACE:
                 mmap = Map(size)
-                player = Player((0,680),85,170)
+                player = Player(0,680,85,170)
                 model = Model(size,player,mmap)
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
