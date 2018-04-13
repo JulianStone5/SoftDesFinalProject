@@ -12,7 +12,8 @@ class Map(pygame.sprite.Sprite):
         self.blocks = [self.death_box,self.block1]
         self.obstacles = []
         self.bad_list = []
-        self.add_Basic_Bitch(1385,170)
+        self.add_Basic_jump(900,170)
+        self.add_Basic_Bad(1700,170)
         self.add_block(255,255)
         self.add_spring(self.blocks[2].x+100,self.blocks[2].y-30)
         self.add_block(255,595)
@@ -30,6 +31,7 @@ class Map(pygame.sprite.Sprite):
         #add for loop  of r bad guy
         for i in range(len(self.bad_list)):
             self.bad_list[i].hit_box = self.bad_list[i].hit_box.move(amount,0)
+
     def add_block(self,width=350,height=500):
         last_block = self.blocks[len(self.blocks)-1]
         x = last_block.x + last_block.w
@@ -53,9 +55,12 @@ class Map(pygame.sprite.Sprite):
         spring = Obstacle(x,y,width,height,'spring')
         self.obstacles.append(spring)
         # change so it in bad_guy class
-    def add_Basic_Bitch(self,x,y,width=85,height=170):
-        bitch = Bad_guy(height,width,x,y)
+    def add_Basic_Bad(self,x,y,width=85,height=125):
+        bitch = Bad_guy(x,y,width,height,'basic')
         self.bad_list.append(bitch)
+    def add_Basic_jump(self,x,y,width=85,height=125):
+            bitch = Bad_guy(x,y,width,height,'jump')
+            self.bad_list.append(bitch)
 
 class Obstacle(object):
     def __init__(self,x,y,width,height,ty):
@@ -64,7 +69,7 @@ class Obstacle(object):
 
 class Player(object):
 
-    def __init__(self,height,width,x,y):
+    def __init__(self,x,y,width,height,is_main=True):
         self.height = height
         self.width = width
         self.x = x
@@ -76,26 +81,116 @@ class Player(object):
                     self.height)
         self.gravity = .165
         self.vy = 8
-        self.vx = 5
+        self.vx = 4
         self.jump1 = False
         self.jump2 = False
+        self.is_main = is_main
+
+    def top_collision(self,i,p1,p2,p3,p4):
+        if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
+            (i.collidepoint(p3) and i.collidepoint(p4)) and self.vy < 0):
+            self.hit_box.y = i.y + i.h
+            self.vy = -1
+
+    def bottom_collision(self,i,p9,p10,p11,p12):
+        if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
+            (i.collidepoint(p11) and i.collidepoint(p12)) and self.vy > 0):
+            self.hit_box.y = i.y - self.height
+            self.vy = 0
+
+            self.jump1 = False
+            self.jump2 = False
+
+    def right_collision(self,i,p4,p6,p8,p12,p15,p16):
+        if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
+            (i.collidepoint(p8) and i.collidepoint(p12)) or
+            i.collidepoint(p15) or i.collidepoint(p16)):
+            self.hit_box.x = i.x - self.width
+            if not self.is_main:
+                self.vx *= -1
+
+    def left_collision(self,i,p1,p5,p7,p9,p13,p14):
+        if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
+            (i.collidepoint(p7) and i.collidepoint(p9)) or
+            i.collidepoint(p13) or i.collidepoint(p14)):
+            self.hit_box.x = i.x + i.w
+            if not self.is_main:
+                self.vx *= -1
+
+    def collision(self,mmap,game_over):
+        """
+        For collision detection, we make a set of three points for each corner
+        of our player hitbox:
+
+        1-2-------3-4
+        -           -
+        5           6
+        -           -
+        13          14
+        -           -
+        7           8
+        -           -
+        9-10-----11-12
+
+        If certain combonations of these points intersect blocks on thee map,
+        it means that the player is hitting blocks at certain regions.
+        """
+        if game_over and not self.is_main:
+            self.gravity = 0
+            self.vy = 0
+            self.vx = 0
+        self.hit_box.y += self.vy # pos[1] to y becasue syntax
+        self.vy += self.gravity
+        if not self.is_main:
+            self.hit_box = self.hit_box.move(self.vx,0)
+        if self.vy > 10:
+            self.vy = 10
+        if game_over:
+            self.jump1 = True
+            self.jump2 = True
+            self.vx = 0
+            return True
+        # Make all key points
+        p1 = self.hit_box.topleft
+        p4 = self.hit_box.topright
+        p9 = self.hit_box.bottomleft
+        p12 = self.hit_box.bottomright
+        p2 = (p1[0]+11,p1[1])
+        p3 = (p4[0]-11,p4[1])
+        p5 = (p1[0],p1[1]+11)
+        p6 = (p4[0],p4[1]+11)
+        p7 = (p9[0],p9[1]-11)
+        p8 = (p12[0],p12[1]-11)
+        p10 = (p9[0]+11,p9[1])
+        p11 = (p12[0]-11,p12[1])
+        p13 = (p5[0],p5[1]+50)
+        p14 = (p7[0],p7[1]-50)
+        p15 = (p6[0],p6[1]+50)
+        p16 = (p8[0],p8[1]-50)
+        for a in range(len(mmap.blocks)):
+            i = mmap.blocks[a]
+            if self.hit_box.colliderect(i) and not game_over: # collision
+                if a == 0 and self.is_main:
+                    return True
+                self.top_collision(i,p1,p2,p3,p4)
+                self.bottom_collision(i,p9,p10,p11,p12)
+                self.right_collision(i,p4,p6,p8,p12,p15,p16)
+                self.left_collision(i,p1,p5,p7,p9,p13,p14)
+        return False
 
 class Bad_guy(Player):
-    def __init__(self,height,width,x,y):
-        self.height = height
-        self.width = width
-        self.x = x
-        self.y = y
-        #define players pos and demision so rep as Rectangle and colltion and draw are easy
-        self.hit_box = pygame.Rect(self.x,
-                    self.y,
-                    self.width,
-                    self.height)
-        self.gravity = .165
-        self.vy = 8
-        self.vx = 5
-        self.jump1 = False
-        self.jump2 = False
+    def __init__(self,x,y,width,height,ty=''):
+        super(Bad_guy,self).__init__(x,y,width,height,False)
+        self.type = ty
+        
+
+        if self.type == 'jump':
+            self.vx = 0
+            self.vy = -10
+
+        else:
+            self.vx = 6
+
 
 class Model(object):
 
@@ -123,46 +218,7 @@ class Model(object):
         If certain combonations of these points intersect blocks on thee map,
         it means that the player is hitting blocks at certain regions.
         """
-        self.player.hit_box.y += self.player.vy # pos[1] to y becasue syntax
-        self.player.vy += self.player.gravity
-        if self.player.vy > 10:
-            self.player.vy = 10
-        # Make all key points
-        p1 = self.player.hit_box.topleft
-        p4 = self.player.hit_box.topright
-        p9 = self.player.hit_box.bottomleft
-        p12 = self.player.hit_box.bottomright
-        p2 = (p1[0]+11,p1[1])
-        p3 = (p4[0]-11,p4[1])
-        p5 = (p1[0],p1[1]+11)
-        p6 = (p4[0],p4[1]+11)
-        p7 = (p9[0],p9[1]-11)
-        p8 = (p12[0],p12[1]-11)
-        p10 = (p9[0]+11,p9[1])
-        p11 = (p12[0]-11,p12[1])
-        for a in range(len(self.map.blocks)):
-            i = self.map.blocks[a]
-            if self.player.hit_box.colliderect(i) and not self.game_over: # collision
-                if a == 0:
-                    self.game_over = True
-                    break
-                if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
-                    (i.collidepoint(p11) and i.collidepoint(p12))):
-                    if self.player.vy > 0:
-                        self.player.hit_box.y = i.y - self.player.height
-                        self.player.vy = 0
-                        self.player.jump1 = False
-                        self.player.jump2 = False
-                if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
-                    (i.collidepoint(p3) and i.collidepoint(p4))):
-                    self.player.hit_box.y = i.y + i.h
-                if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
-                    (i.collidepoint(p8) and i.collidepoint(p12))):
-                    self.player.hit_box.x = i.x - self.player.width
-                if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
-                    (i.collidepoint(p7) and i.collidepoint(p9))):
-                    self.player.hit_box.x = i.x + i.w
-
+        self.game_over = self.player.collision(self.map,self.game_over)
         for a in range(len(self.map.obstacles)):
             i = self.map.obstacles[a]
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
@@ -175,6 +231,7 @@ class Model(object):
         keys = pygame.key.get_pressed()
         for a in range(len(self.map.bad_list)):
             i = self.map.bad_list[a]
+            i.collision(self.map,self.game_over)
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
                 if keys[pygame.K_e] == True:
                     self.map.bad_list.remove(i)
@@ -249,7 +306,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player(170,85,0,680)
+    player = Player(0,680,85,170)
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -261,7 +318,7 @@ if __name__ == '__main__':
                 running = False
             if model.game_over and event.type == KEYDOWN and event.key == pygame.K_SPACE:
                 mmap = Map(size)
-                player = Player(170,85,[0,680])
+                player = Player(0,680,85,170)
                 model = Model(size,player,mmap)
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
