@@ -17,7 +17,7 @@ class Player(object):
         if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
             (i.collidepoint(p3) and i.collidepoint(p4)) and self.vy < 0):
             self.hit_box.y = i.y + i.h
-            self.vy = -1
+            self.vy = 1
 
     def bottom_collision(self,i,p9,p10,p11,p12):
         if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom

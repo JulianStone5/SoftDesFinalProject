@@ -11,35 +11,42 @@ class Map(pygame.sprite.Sprite):
         self.blocks = [self.death_box,self.starter_block]
         self.obstacles = []
         self.enemies = []
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
         self.add_small_block()
-        #self.add_spring(self.blocks[-1].x+90,self.blocks[-1].y-30)
-        self.add_block()
-        self.add_chasm()
-        self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175)
-        self.add_block()
-        self.add_block()
-        self.add_small_block()
-        self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
-        self.add_small_block()
-        self.add_block()
-        self.add_thin_block()
         self.add_tall_block()
         self.add_tall_block()
-        self.add_block()
-        self.add_block()
-        self.add_chasm()
-        self.add_chasm()
-        self.add_block()
-        self.add_thin_block()
-        self.add_block()
+        self.add_small_block()
         self.add_small_block()
         self.add_smaller_block()
-        self.add_floating_up_block()
-        self.add_floating_up_block()
+        self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_small_block()
+        self.add_tall_block()
+        self.add_tall_block()
+        self.add_chasm()
+        self.add_tall_block()
+        self.add_tall_block()
+        self.add_chasm()
+        self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175)
+        self.add_tall_block()
+        self.add_tall_block()
         self.add_floating_up_block()
         self.add_floating_up_block()
         self.add_floating_down_block()
+        self.add_wide_floating_down_block()
+        self.add_floating_up_block()
+        self.add_floating_up_block()
         self.add_floating_down_block()
+        self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175)
+        self.add_floating_up_block()
+        self.add_wide_floating_up_block()
+
 
 
     def side_scroll(self,amount):
@@ -67,7 +74,7 @@ class Map(pygame.sprite.Sprite):
         block = pygame.Rect(x,y,width,height)
         self.blocks.append(block)
 
-    def add_tall_block(self,width=250,height=700):
+    def add_tall_block(self,width=250,height=600):
         self.add_block(width,height)
 
     def add_thin_block(self, width=125, height=500):
@@ -76,7 +83,7 @@ class Map(pygame.sprite.Sprite):
     def add_small_block(self,width=250,height=250):
         self.add_block(width,height)
 
-    def add_smaller_block(self,width=250,height=125):
+    def add_smaller_block(self,width=250,height=85):
         self.add_block(width,height)
 
     def add_chasm(self,width=255,height=50):
@@ -87,8 +94,17 @@ class Map(pygame.sprite.Sprite):
 
     def add_floating_up_block(self,width=200,height=60):
         last_block = self.blocks[-1]
-        x = last_block.x + last_block.w
-        y = last_block.y - 100 - height
+        x = last_block.x + last_block.w + 70
+        y = last_block.y - 200 - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_wide_floating_up_block(self,width=400,height=60):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w + 70
+        y = last_block.y - 200 - height
         if last_block.y > self.size[1]:
             y = self.size[1]-height
         block = pygame.Rect(x,y,width,height)
@@ -96,8 +112,17 @@ class Map(pygame.sprite.Sprite):
 
     def add_floating_down_block(self,width=200,height=60):
         last_block = self.blocks[-1]
-        x = last_block.x + last_block.w
-        y = last_block.y + 150 - height
+        x = last_block.x + last_block.w + 70
+        y = last_block.y + 315 - height
+        if last_block.y > self.size[1]:
+            y = self.size[1]-height
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.append(block)
+
+    def add_wide_floating_down_block(self,width=400,height=60):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w + 70
+        y = last_block.y + 315 - height
         if last_block.y > self.size[1]:
             y = self.size[1]-height
         block = pygame.Rect(x,y,width,height)

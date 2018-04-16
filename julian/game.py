@@ -11,6 +11,7 @@ class Model(object):
         self.player = player
         self.map = mmap
         self.game_over = False
+        self.game_start = False
 
     def collision(self):
         vscroll = False
@@ -53,7 +54,7 @@ class PyGameWindowView(object):
         self.screen.fill(pygame.Color(0,0,0))
         for i in self.model.map.blocks:
             if i == self.model.map.blocks[0]:
-                pygame.draw.rect(self.screen,(0,0,0), i)
+                pygame.draw.rect(self.screen,(0,0,0),i)
             else:
                 pygame.draw.rect(self.screen,(0,255,0), i)
         for i in self.model.map.obstacles:
@@ -72,6 +73,30 @@ class PyGameWindowView(object):
                                          size[1]//2-game_over.get_height()))
             self.screen.blit(restart, (size[0]//2-restart.get_width()//2, size[1]//2))
         pygame.display.update()
+
+    def start_screen(self):
+        story = pygame.font.Font("freesansbold.ttf",50)
+        self.fade_in(story, "Story stuff...",10,10)
+        self.fade_in(story, "Story stuff...",410,310)
+        self.fade_in(story, "Story stuff...",810,610)
+
+    def fade_in(self,f,text,x,y):
+        p = f.render(text,True,(255,255,255))
+        surf = pygame.Surface(f.size(text))
+        surf.blit(p,(0,0))
+        for i in range (200):
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                if event.type == KEYDOWN and event.key == pygame.K_RETURN:
+                    self.model.game_start = True
+            if self.model.game_start:
+                return
+            surf.set_alpha(i)
+            self.screen.blit(surf, (x,y))
+            pygame.display.flip()
+            time.sleep(.01)
+            pygame.display.update()
 
 
 class PyGameKeyboardController(object):
@@ -104,7 +129,7 @@ class PyGameKeyboardController(object):
                 self.model.player.jump2 = True # Mark second jump
                 self.up_uncl = False
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            self.model.player.vy = 5 # Move player down
+            self.model.player.vy = 8 # Move player down
 
 if __name__ == '__main__':
     pygame.init()
@@ -116,8 +141,9 @@ if __name__ == '__main__':
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
+    pygame.display.set_mode(size)
     pygame.mixer.init()
-    pygame.mixer.music.load('track3.mp3')
+    pygame.mixer.music.load('track1.mp3')
     pygame.mixer.music.play()
 
     running = True
@@ -129,9 +155,13 @@ if __name__ == '__main__':
                 mmap = Map(size)
                 player = Player(0,680,85,170)
                 model = Model(size,player,mmap)
+                model.game_start = True
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
-        if player.hit_box.y < size[1] or not model.game_over:
+        if not model.game_start:
+            view.start_screen()
+            model.game_start = True
+        elif player.hit_box.y < size[1] or not model.game_over:
             controller.handle_movement()
             model.collision()
         view.draw()
