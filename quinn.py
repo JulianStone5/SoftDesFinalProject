@@ -8,66 +8,42 @@ class Map(pygame.sprite.Sprite):
     def __init__(self,size):
         self.size = size
         self.death_box = pygame.Rect(-1000,self.size[1],10000,50)
-        self.starter_block = pygame.Rect(0,935,320,85)
+        self.starter_block = pygame.Rect(0,935,320,250)
         self.blocks = [self.death_box,self.starter_block]
         self.obstacles = []
         self.add_small_block()
-        self.add_block()
-        self.add_chasm()
-        self.add_block()
-        self.add_block()
+        self.add_small_block()
         self.add_small_block()
         self.add_small_block()
         self.add_block()
-        self.add_thin_block()
         self.add_tall_block()
-        self.add_tall_block()
-        self.add_block()
-        self.add_block()
-        self.add_chasm()
-        self.add_chasm()
-        self.add_block()
-        self.add_thin_block()
-        self.add_block()
+        self.add_small_block()
+        self.add_small_block()
         self.add_small_block()
         self.add_smaller_block()
-        self.add_box()
-        self.add_box()
-        self.add_box()
-        self.add_box()
-        self.add_down_box()
-        self.add_down_box()
-        self.add_last_box()
-        self.add_tall_block()
-        self.add_tall_block()
-        self.add_block()
-        self.add_box()
-        self.add_box()
-        self.add_last_box()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_small_block()
         self.add_block()
         self.add_thin_block()
         self.add_tall_block()
         self.add_tall_block()
-        self.add_block()
         self.add_chasm()
-        self.add_chasm()
-        self.add_block()
-        self.add_small_block()
-        self.add_small_block()
-        self.add_small_block()
-        self.add_block()
+        self.add_tall_block()
+        self.add_tall_block()
+        self.add_tall_block()
         self.add_box()
         self.add_box()
         self.add_down_box()
-        self.add_down_box()
+        self.add_box()
         self.add_last_box()
-        self.add_block()
+
 
     def side_scroll(self,amount):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
 
-    def add_block(self,width=250,height=500):
+    def add_block(self,width=250,height=350):
         last_block = self.blocks[len(self.blocks)-1]
         x = last_block.x + last_block.w
         y = last_block.y + last_block.h - height
@@ -79,7 +55,7 @@ class Map(pygame.sprite.Sprite):
     def add_small_block(self,width=250,height=250):
         self.add_block(width,height)
 
-    def add_smaller_block(self,width=250,height=125):
+    def add_smaller_block(self,width=250,height=200):
         self.add_block(width,height)
 
     def add_thin_block(self, width=125, height=500):
