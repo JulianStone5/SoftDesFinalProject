@@ -21,7 +21,8 @@ class Map(pygame.sprite.Sprite):
         self.add_small_block()
         self.add_small_block()
         self.add_smaller_block()
-        self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125,0)
+        self.add_Flayer_enemy(1000,800,1)
+        self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125,4)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
@@ -144,9 +145,13 @@ class Map(pygame.sprite.Sprite):
         self.obstacles.append(spring)
 
     def add_basic_enemy(self,x,y,v=4,width=85,height=125):
-        enemy = Enemy(x,y,width,height,'basic',v,0)
-        self.enemies.append(enemy)
+        enemy_basic = Enemy(x,y,width,height,'basic',v,0)
+        self.enemies.append(enemy_basic)
 
     def add_jump_enemy(self,x,y,v=-18,width=85,height=125):
-        enemy = Enemy(x,y,width,height,'jump',0,v)
-        self.enemies.append(enemy)
+        enemy_jump = Enemy(x,y,width,height,'jump',0,v)
+        self.enemies.append(enemy_jump)
+
+    def add_Flayer_enemy(self,x,y,speed,width=85,height=85):
+        enemy_fly = Flyer(x,y,width,height,speed)
+        self.enemies.append(enemy_fly)
