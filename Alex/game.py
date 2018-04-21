@@ -38,7 +38,11 @@ class Model(object):
                     self.player.jump1 = True # removes first jump
                     self.player.vy = -12
         for i in self.map.enemies:
-            i.collision(self.map,self.game_over)
+            if type(i) != Flyer:
+                i.collision(self.map,self.game_over)
+            if type(i) == Flyer:
+                i.Fly_movement()#self.map.enemies[i])
+
             if self.player.hit_box.colliderect(i.hit_box) and not self.game_over:
                 self.game_over = True
                 break
@@ -65,6 +69,7 @@ class PyGameWindowView(object):
         for i in self.model.map.enemies:
             pygame.draw.rect(self.screen,(255,255,255), i.hit_box)
         pygame.draw.rect(self.screen,(0,0,255),self.model.player.hit_box)
+        #
         if self.model.game_over:
             game_over_font = pygame.font.Font("freesansbold.ttf",50)
             game_over = game_over_font.render("GAME OVER",True,(255,0,0))
@@ -145,6 +150,12 @@ if __name__ == '__main__':
     pygame.mixer.init()
     pygame.mixer.music.load('track1.mp3')
     pygame.mixer.music.play()
+    print(mmap.blocks[1].x)
+    print(mmap.blocks[1].y)
+    print(mmap.blocks[2].x)
+    print(mmap.blocks[2].y)
+    print(mmap.blocks[6].x)
+    print(mmap.blocks[6].y)
 
     running = True
     while running:
