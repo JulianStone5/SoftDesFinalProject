@@ -49,7 +49,7 @@ class PyGameWindowView(object):
 
     def draw(self,S,P,PA,E):
         window = pygame.Rect(0,0,self.size[0],self.size[1])
-        self.screen.fill(pygame.Color(0,0,0))
+        self.screen.fill(Color(0,0,0))
         for i in self.model.map.blocks:
             if i.colliderect(window) and i != self.model.map.blocks[0]:
                 self.screen.blit(S,(i.x,i.y),(0,0,i.w,i.h))
@@ -167,12 +167,7 @@ class PyGameKeyboardController(object):
                 self.model.player.attacking = True
                 self.model.player.att_animation = True
                 self.att_uncl = False
-                # if not self.model.player.mov_right:
-                #    self.model.player.hit_box.x -= 40
-        if time.time()-self.t > .1:
-            # if self.model.player.attacking:
-            #     # if not self.model.player.mov_right:
-            #     #     self.model.player.hit_box.x += 40
+        if time.time()-self.t > .15:
             self.model.player.attacking = False
             self.model.player.att_animation = False
 
@@ -193,7 +188,7 @@ if __name__ == '__main__':
     # pygame.mixer.music.play()
 
     running = True
-    stone = pygame.image.load("stone.png").convert()
+    stone = pygame.image.load("stoneBack.png").convert()
     S = pygame.Surface(stone.get_size(), pygame.HWSURFACE)
     S.blit(stone,(0,0))
     p = pygame.image.load("player.png").convert()

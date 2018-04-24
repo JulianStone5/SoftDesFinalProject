@@ -227,7 +227,7 @@ class Map(pygame.sprite.Sprite):
         self.obstacles.append(spring)
 
     def add_basic_enemy(self,x,y,width=85,height=125):
-        enemy = Enemy(x,y,width,height,'basic',4)
+        enemy = Enemy(x,y,width,height,'basic',3)
         self.enemies.append(enemy)
 
     def add_jump_enemy(self,x,y,width=85,height=125):
