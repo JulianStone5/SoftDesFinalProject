@@ -6,12 +6,16 @@ class Player(object):
     def __init__(self,x,y,width,height,is_main=True):
         #define players pos and demision so rep as Rectangle and colltion and draw are easy
         self.hit_box = pygame.Rect(x,y,width,height)
-        self.gravity = .165
+        self.att_box = pygame.Rect(x+width,y-42,50,20)
+        self.gravity = .2
         self.vy = 8
         self.vx = 4
         self.jump1 = False #setting up for double jumps
         self.jump2 = False
+        self.attacking = False
+        self.att_animation = False
         self.is_main = is_main
+        self.mov_right = True
 
     def top_collision(self,i,p1,p2,p3,p4):
         if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
@@ -36,7 +40,9 @@ class Player(object):
             i.collidepoint(p15) or i.collidepoint(p16)):
             self.hit_box.x = i.x - self.hit_box.w
             if not self.is_main:
-                self.vx *= -1
+                if self.type != 'elite':
+                    self.vx *= -1
+                self.mov_right = False
 
     def left_collision(self,i,p1,p5,p7,p9,p13,p14):
         if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
@@ -44,9 +50,12 @@ class Player(object):
             i.collidepoint(p13) or i.collidepoint(p14)):
             self.hit_box.x = i.x + i.w
             if not self.is_main:
-                self.vx *= -1
+                if self.type != 'elite':
+                    self.vx *= -1
+                self.mov_right = True
 
-    def collision(self,mmap,game_over,vscroll=False):
+
+    def collision(self,mmap,game_over,player,vscroll=False):
         """
         For collision detection, we make a set of three points for each corner
         of our player hitbox:
@@ -75,15 +84,21 @@ class Player(object):
         if not vscroll:
             self.hit_box.y += self.vy # pos[1] to y becasue syntax
         self.vy += self.gravity
-        if not self.is_main:
+        if not self.is_main and self.type != 'elite':
             self.hit_box = self.hit_box.move(self.vx,0) #So enemies can move without keypress
+        elif not self.is_main and self.type == 'elite':
+            self.follow(player)
         if self.vy > 10: #Terminal velocity
             self.vy = 10
         if game_over: #Stops collision detection for player when game is over
             self.jump1 = True
             self.jump2 = True
             self.vx = 0
-            return True
+            self.attacking = False
+            return True, True
+        i = mmap.blocks[-1]
+        if self.is_main and self.hit_box.x>i.x+i.w-self.hit_box.w:
+            return False, False
         # Make all key points
         p1 = self.hit_box.topleft
         p4 = self.hit_box.topright
@@ -105,9 +120,15 @@ class Player(object):
             i = mmap.blocks[a]
             if self.hit_box.colliderect(i) and not game_over: # collision
                 if a == 0 and self.is_main: # If player falls off screen
-                    return True
-                self.top_collision(i,p1,p2,p3,p4)
+                    return True, True
+                if self.is_main or (not self.is_main and self.type != 'jump'):
+                    self.top_collision(i,p1,p2,p3,p4)
+                    self.right_collision(i,p4,p6,p8,p12,p15,p16)
+                    self.left_collision(i,p1,p5,p7,p9,p13,p14)
                 self.bottom_collision(i,p9,p10,p11,p12)
-                self.right_collision(i,p4,p6,p8,p12,p15,p16)
-                self.left_collision(i,p1,p5,p7,p9,p13,p14)
-        return False
+        self.att_box.y = self.hit_box.y+self.hit_box.h//2
+        if self.mov_right:
+            self.att_box.x = self.hit_box.x+self.hit_box.w
+        else:
+            self.att_box.x = self.hit_box.x-self.att_box.w
+        return False, True

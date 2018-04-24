@@ -12,11 +12,27 @@ class Obstacle(Player):
         self.vy = 0
 
 class Enemy(Player):
-    def __init__(self,x,y,width,height,ty=''):
+
+    def __init__(self,x,y,width,height,ty='',VstartX=0,VstartY=0,lives=1):
         super(Enemy,self).__init__(x,y,width,height,False)
         self.type = ty
+        self.lives = lives
+        self.vx = VstartX
+        self.mov_right = False
         if self.type == 'jump':
-            self.vx = 0
-            self.vy = -18
+            self.vy = -VstartY
+
+class Elite(Enemy):
+
+    def __init__(self,x,y,width,height,ty='elite',VstartX=2,VstartY=0,lives=3):
+        super(Elite,self).__init__(x,y,width,height,ty,VstartX,VstartY,lives)
+
+    def follow(self, player):
+        midplayer = player.hit_box.x+player.hit_box.w//2
+        midself = self.hit_box.x+self.hit_box.w//2
+        if midplayer < midself:
+            self.hit_box = self.hit_box.move(-self.vx,0)
+            self.mov_right = False
         else:
-            self.vx = 4
+            self.hit_box = self.hit_box.move(self.vx,0)
+            self.mov_right = True
