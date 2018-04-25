@@ -6,8 +6,8 @@ class Map(pygame.sprite.Sprite):
 
     def __init__(self,size):
         self.size = size
-        self.death_box = pygame.Rect(-1000,self.size[1],10000,50)
-        self.ceiling_box = pygame.Rect(-200,-100,10000,200)
+        self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
+        self.ceiling_box = pygame.Rect(-200,-100,10000-120,200)
         self.starter_block = pygame.Rect(0,935,320,85)
         self.blocks = [self.death_box,self.ceiling_box,self.starter_block]
         self.obstacles = []
@@ -19,6 +19,8 @@ class Map(pygame.sprite.Sprite):
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
+        self.add_square(500,150,150)
+        self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_block()
@@ -31,12 +33,17 @@ class Map(pygame.sprite.Sprite):
         self.add_smaller_block()
         self.add_small_block()
         self.add_smaller_block()
+        self.add_square(450,350,100)
+        self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_small_block()
         self.add_smaller_block()
+        self.add_square(450,350,100)
         self.add_smaller_block()
         self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_square(450,350,100)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
@@ -49,6 +56,15 @@ class Map(pygame.sprite.Sprite):
         self.add_chasm()
         self.add_thin_block()
         self.add_smaller_block()
+        self.add_square(450,400,75)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_square(250,400,75)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_square(450,400,75)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
@@ -100,6 +116,12 @@ class Map(pygame.sprite.Sprite):
         block = pygame.Rect(x,self.size[1]+50,width,height)
         self.blocks.append(block)
 
+    def add_square(self,y=500,width=150,height=150):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.insert(len(self.blocks)-1,block)
+
     def add_floating_up_block(self,width=200,height=60):
         last_block = self.blocks[-1]
         x = last_block.x + last_block.w + 70
@@ -146,6 +168,10 @@ class Map(pygame.sprite.Sprite):
     def add_spikes(self,x,y,width=85,height=30):
         spikes = Obstacle(width,height,(x,y),'spikes')
         self.obstacles.append(spikes)
+
+    def add_floating_square(self,x,y,width=85,height=85):
+        square = Obstacle(width,height,(x,y),'spikes')
+        self.obstacles.append(square)
 
     def add_spring(self,x,y,width=85,height=30):
         spring = Obstacle(x,y,width,height,'spring')
