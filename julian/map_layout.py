@@ -42,7 +42,7 @@ class Map(pygame.sprite.Sprite):
         self.tutorial.append([self.blocks[-1].x,self.blocks[-1].y-350,'Press SPACE to attack!'])
         self.add_smaller_block()
         points = [[10,600],[1000,600],[1000,800],[10,800]]
-        self.add_flyer(points,4)
+        #self.add_flyer(points,4)
         self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
         self.add_smaller_block()
         self.add_smaller_block()
