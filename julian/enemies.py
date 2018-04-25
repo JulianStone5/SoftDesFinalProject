@@ -24,7 +24,7 @@ class Enemy(Player):
 
 class Elite(Enemy):
 
-    def __init__(self,x,y,width,height,ty='elite',VstartX=2,VstartY=0,lives=3):
+    def __init__(self,x,y,width,height,ty='elite',VstartX=1.5,VstartY=0,lives=3):
         super(Elite,self).__init__(x,y,width,height,ty,VstartX,VstartY,lives)
 
     def follow(self, player):
@@ -36,3 +36,32 @@ class Elite(Enemy):
         else:
             self.hit_box = self.hit_box.move(self.vx,0)
             self.mov_right = True
+
+class Flyer(object):
+    def __init__(self,points,width,height,speed,is_main=False,lives=1):
+        #define players pos and demision so rep as Rectangle and colltion and draw are easy
+        self.points = points
+        self.hit_box = pygame.Rect(self.points[0][0],self.points[0][1],width,height)
+        self.speed = speed
+        self.lives = 1
+        self.mov_right = False
+        self.i = 0
+
+    def Fly_movement(self):
+        if self.points[self.i][0] == self.points[(self.i+1) %4][0] and self.points[self.i][1] < self.points[(self.i+1)%4][1]: # down
+            if self.hit_box.y > self.points[(self.i+1)%4][1]:
+                self.i = (self.i +1) %4
+            self.hit_box = self.hit_box.move(0,self.speed)
+        elif self.points[self.i][0] == self.points[(self.i+1)%4][0] and self.points[self.i][1] > self.points[(self.i+1)%4][1]: # up
+            if self.hit_box.y < self.points[(self.i+1)%4][1]:
+                self.i = (self.i +1) %4
+            self.hit_box = self.hit_box.move(0,-self.speed)
+
+        elif self.points[self.i][1] == self.points[(self.i+1)%4][1] and self.points[self.i][0] < self.points[(self.i+1)%4][0]:
+            if self.hit_box.x > self.points[(self.i+1)%4][0]:
+                self.i = (self.i +1) %4
+            self.hit_box = self.hit_box.move(self.speed,0)
+        elif self.points[self.i][1] == self.points[(self.i+1)%4][1] and self.points[self.i][0] > self.points[(self.i+1)%4][0]:
+            if self.hit_box.x < self.points[(self.i+1)%4][0]:
+                self.i = (self.i +1) %4
+            self.hit_box = self.hit_box.move(-self.speed,0)

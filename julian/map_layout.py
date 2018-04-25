@@ -4,10 +4,19 @@ from enemies import *
 
 class Map(pygame.sprite.Sprite):
 
-    def __init__(self,size,level=1):
+    def __init__(self,size,level=0):
         self.size = size
         self.level = level
-        self.levelChanged = True
+        self.levelChanged = False
+        self.story_text = [("Story Stuff...","Story Stuff...","Story Stuff..."),#Story before start
+                           ("Story Stuff...","Story Stuff...","Story Stuff..."),#Story after level 1
+                           ("Story Stuff...","Story Stuff...","Story Stuff..."),#Story after level 2
+                           ("Story Stuff...","Story Stuff...","Story Stuff..."),#Story after level 3
+                           ("Story Stuff...","Story Stuff...","Story Stuff...")]#Story after level 4
+        self.death_box = pygame.Rect(-1000,self.size[1],50000,50)
+        self.blocks = [self.death_box]
+        self.enemies = []
+        self.obstacles = []
         self.make_level()
 
     def level1(self):
@@ -30,7 +39,10 @@ class Map(pygame.sprite.Sprite):
         self.add_small_block()
         self.add_small_block()
         self.tutorial.append([self.blocks[-1].x,self.blocks[-1].y-400,"Beware of enemies!"])
+        self.tutorial.append([self.blocks[-1].x,self.blocks[-1].y-350,'Press SPACE to attack!'])
         self.add_smaller_block()
+        points = [[10,600],[1000,600],[1000,800],[10,800]]
+        #self.add_flyer(points,4)
         self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
         self.add_smaller_block()
         self.add_smaller_block()
@@ -131,6 +143,9 @@ class Map(pygame.sprite.Sprite):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(amount,0)
         for i in range(len(self.enemies)):
             self.enemies[i].hit_box = self.enemies[i].hit_box.move(amount,0)
+            if type(self.enemies[i]) == Flyer:
+                for j in range(len(self.enemies[i].points)):
+                    self.enemies[i].points[j][0] += amount
         if self.level != 1:
             return
         for i in range(len(self.tutorial)):
@@ -143,6 +158,9 @@ class Map(pygame.sprite.Sprite):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(0,amount)
         for i in range(len(self.enemies)):
             self.enemies[i].hit_box = self.enemies[i].hit_box.move(0,amount)
+            if type(self.enemies[i]) == Flyer:
+                for j in range(len(self.enemies[i].points)):
+                    self.enemies[i].points[j][1] += amount
         if self.level != 1:
             return
         for i in range(len(self.tutorial)):
@@ -227,7 +245,7 @@ class Map(pygame.sprite.Sprite):
         self.obstacles.append(spring)
 
     def add_basic_enemy(self,x,y,width=85,height=125):
-        enemy = Enemy(x,y,width,height,'basic',4)
+        enemy = Enemy(x,y,width,height,'basic',3)
         self.enemies.append(enemy)
 
     def add_jump_enemy(self,x,y,width=85,height=125):
@@ -237,3 +255,7 @@ class Map(pygame.sprite.Sprite):
     def add_elite(self,x,y,width=85,height=125):
         enemy = Elite(x,y,width,height)
         self.enemies.append(enemy)
+
+    def add_flyer(self,points,speed,width=85,height=85):
+        enemy_fly = Flyer(points,width,height,speed)
+        self.enemies.append(enemy_fly)
