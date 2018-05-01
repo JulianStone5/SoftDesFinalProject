@@ -167,6 +167,19 @@ class PyGameWindowView(object):
         story = pygame.font.Font("freesansbold.ttf",50)
         begin = pygame.font.Font("freesansbold.ttf",30)
         start = False
+        if self.model.map.level == 0:
+            self.screen.blit(N,((self.size[0]-N.get_width())//2,(self.size[1]-N.get_height())//2-400))
+            self.screen.blit(C,((self.size[0]-C.get_width())//2,(self.size[1]-C.get_height())//2))
+            pygame.display.update()
+            start = self.fade_in(begin, 'Press ENTER to start',centered=True) or start
+            while not start:
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                    if event.type == KEYDOWN and event.key == pygame.K_RETURN:
+                        start = True
+        self.screen.fill((0,0,0))
+        start = False
         for i in range(len(text)):
             start = self.fade_in(story, text[i],10+i*400,10+i*300) or start
         start = self.fade_in(begin, 'Press ENTER to continue',1400,975) or start
@@ -176,19 +189,6 @@ class PyGameWindowView(object):
                     pygame.quit()
                 if event.type == KEYDOWN and event.key == pygame.K_RETURN:
                     start = True
-        if self.model.map.level == 0:
-            self.screen.fill((0,0,0))
-            self.screen.blit(N,((self.size[0]-N.get_width())//2,(self.size[1]-N.get_height())//2-400))
-            self.screen.blit(C,((self.size[0]-C.get_width())//2,(self.size[1]-C.get_height())//2))
-            pygame.display.update()
-            start = False
-            start = self.fade_in(begin, 'Press ENTER to start',centered=True) or start
-            while not start:
-                for event in pygame.event.get():
-                    if event.type == QUIT:
-                        pygame.quit()
-                    if event.type == KEYDOWN and event.key == pygame.K_RETURN:
-                        start = True
 
     def fade_in(self,f,text,x=10,y=10,color=(255,255,255),centered=False):
         p = f.render(text,True,color)
