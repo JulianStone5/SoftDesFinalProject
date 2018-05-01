@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 from enemies import *
 
-class Map(pygame.sprite.Sprite):
+class Map(object):
 
     def __init__(self,size,level=0):
         self.size = size
@@ -17,6 +17,8 @@ class Map(pygame.sprite.Sprite):
         self.blocks = [self.death_box]
         self.enemies = []
         self.obstacles = []
+        self.bullet = []
+        self.doors = []
         self.make_level()
 
     def level1(self):
@@ -24,6 +26,7 @@ class Map(pygame.sprite.Sprite):
         self.starter_block = pygame.Rect(0,935,320,85)
         self.blocks = [self.death_box,self.starter_block]
         self.obstacles = []
+        self.bullet = []
         self.enemies = []
         self.tutorial = []
         self.tutorial.append([self.blocks[-1].x+50,self.blocks[-1].y-500,"Use A/D or the arrow keys to move"])
@@ -41,8 +44,6 @@ class Map(pygame.sprite.Sprite):
         self.tutorial.append([self.blocks[-1].x,self.blocks[-1].y-400,"Beware of enemies!"])
         self.tutorial.append([self.blocks[-1].x,self.blocks[-1].y-350,'Press SPACE to attack!'])
         self.add_smaller_block()
-        points = [[10,600],[1000,600],[1000,800],[10,800]]
-        #self.add_flyer(points,4)
         self.add_basic_enemy(self.blocks[-1].x+100,self.blocks[-1].y-125)
         self.add_smaller_block()
         self.add_smaller_block()
@@ -73,9 +74,15 @@ class Map(pygame.sprite.Sprite):
         self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
         self.ceiling_box = pygame.Rect(-200,-100,10000-120,200)
         self.starter_block = pygame.Rect(0,935,320,85)
-        self.blocks = [self.death_box,self.ceiling_box,self.starter_block]
+        self.blocks = [self.death_box]
+        self.bullet = []
+        for i in range(40):
+            rect = pygame.Rect(i*252-200,-100,252,200)
+            self.blocks.append(rect)
+        self.blocks.append(self.starter_block)
         self.obstacles = []
         self.enemies = []
+        self.doors = []
         self.add_small_block()
         self.add_thin_block()
         self.add_tall_block()
@@ -83,54 +90,110 @@ class Map(pygame.sprite.Sprite):
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
+        self.add_basic_enemy(self.blocks[-1].x,self.blocks[-1].y-125)
         self.add_square(500,150,150)
+        x = self.blocks[len(self.blocks)-2].x-185
+        y = self.blocks[len(self.blocks)-2].y-185
+        w = 385
+        h = 385
+        points = [[x,y],[x,y+h],[x+w,y+h],[x+w,y]]
+        self.add_flyer(points,2,True)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_block()
         self.add_smaller_block()
+        x = self.blocks[-1].x+self.blocks[-1].w//2
+        y = 300
+        points = [[x,y],[x,y+h]]
+        self.add_flyer(points,4)
         self.add_smaller_block()
         self.add_smaller_block()
+        x = self.blocks[-1].x+self.blocks[-1].w//2
+        points = [[x,y+h],[x,y]]
+        self.add_flyer(points,4)
         self.add_block()
         self.add_smaller_block()
+        self.add_elite(self.blocks[-1].x,self.blocks[-1].y-125)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_small_block()
+        self.add_door_lock()
+        self.add_smaller_block()
+        self.add_basic_enemy(self.blocks[-1].x,self.blocks[-1].y-125)
+        self.add_square(450,350,100)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        x = self.blocks[-1].x+self.blocks[-1].w//2+150
+        points = [[x,y+h],[x,y]]
+        self.add_flyer(points,2,True)
+        self.add_smaller_block()
+        self.add_small_block()
+        self.add_smaller_block()
+        self.add_basic_enemy(self.blocks[-1].x,self.blocks[-1].y-125)
+        self.add_square(450,350,100)
+        x = self.blocks[len(self.blocks)-2].x-185
+        y = self.blocks[len(self.blocks)-2].y-185
+        w = 635
+        h = 385
+        points = [[x+w,y+h],[x+w,y],[x,y],[x,y+h]]
+        self.add_flyer(points,4)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_square(450,350,100)
+        x = self.blocks[len(self.blocks)-2].x-185
+        y = self.blocks[len(self.blocks)-2].y-185
+        points = [[x,y],[x,y+h],[x+w,y+h],[x+w,y]]
+        self.add_flyer(points,4)
+        self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_small_block()
         self.add_smaller_block()
-        self.add_square(450,350,100)
+        x = self.blocks[-1].x+self.blocks[-1].w//2
+        y = 300
+        points = [[x,y],[x,y+h]]
+        self.add_flyer(points,4)
+        self.add_basic_enemy(self.blocks[-1].x,self.blocks[-1].y-125)
         self.add_smaller_block()
         self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_small_block()
-        self.add_smaller_block()
-        self.add_square(450,350,100)
-        self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_square(450,350,100)
-        self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_small_block()
-        self.add_smaller_block()
-        self.add_smaller_block()
-        self.add_smaller_block()
+        x = self.blocks[-1].x+self.blocks[-1].w//2
+        points = [[x,y+h],[x,y]]
+        self.add_flyer(points,4)
         self.add_small_block()
         self.add_thin_block()
         self.add_chasm()
+        self.add_jump_enemy(self.blocks[-1].x+90,self.blocks[-1].y-175,v=16)
         self.add_thin_block()
         self.add_smaller_block()
         self.add_square(450,400,75)
+        self.add_basic_enemy(self.blocks[-2].x,self.blocks[-2].y-125)
+        self.add_square_bump(400)
         self.add_smaller_block()
+        self.add_elite(self.blocks[-1].x,self.blocks[-1].y-125)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_square(250,400,75)
+        self.add_basic_enemy(self.blocks[-2].x+100,self.blocks[-2].y-125)
+        self.add_square_bump(200)
+        self.add_square(600,400,75)
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_square(450,400,75)
+        self.add_basic_enemy(self.blocks[-2].x+50,self.blocks[-2].y-125)
+        self.add_square_bump(400)
         self.add_smaller_block()
         self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_door_drop()
+        self.add_elite(self.doors[-1].x+10,self.doors[-1].y-125)
+        self.add_smaller_block()
+        self.add_door_lock()
         self.add_smaller_block()
         self.add_smaller_block()
         self.add_smaller_block()
@@ -180,7 +243,38 @@ class Map(pygame.sprite.Sprite):
         self.add_wide_floating_up_block()
 
     def level4(self):
-        return
+        self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
+        self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
+        self.ceiling_box = pygame.Rect(-200,-100,10000-120,200)
+        self.starter_block = pygame.Rect(0,935,320,85)
+        self.blocks = [self.death_box]
+        for i in range(20):
+            rect = pygame.Rect(i*252-200,-100,252,200)
+            self.blocks.append(rect)
+        self.blocks.append(self.starter_block)
+        self.obstacles = []
+        self.enemies = []
+        self.add_small_block()
+        self.add_thin_block()
+        self.add_tall_block()
+        self.add_small_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_boss(self.blocks[-1].x,self.blocks[-1].y-250)
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
+        self.add_smaller_block()
 
     def make_level(self):
         if self.level == 1:
@@ -195,8 +289,12 @@ class Map(pygame.sprite.Sprite):
     def side_scroll(self,amount):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
+        for i in range(len(self.bullet)):
+            self.bullet[i].hit_box = self.bullet[i].hit_box.move(amount,0)
         for i in range(len(self.obstacles)):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(amount,0)
+        for i in range(len(self.doors)):
+            self.doors[i] = self.doors[i].move(amount,0)
         for i in range(len(self.enemies)):
             self.enemies[i].hit_box = self.enemies[i].hit_box.move(amount,0)
             if type(self.enemies[i]) == Flyer:
@@ -210,8 +308,12 @@ class Map(pygame.sprite.Sprite):
     def vert_scroll(self,amount):
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(0,amount)
+        for i in range(len(self.bullet)):
+            self.bullet[i].hit_box = self.bullet[i].hit_box.move(0,amount)
         for i in range(len(self.obstacles)):
             self.obstacles[i].hit_box = self.obstacles[i].hit_box.move(0,amount)
+        for i in range(len(self.doors)):
+            self.doors[i] = self.doors[i].move(0,amount)
         for i in range(len(self.enemies)):
             self.enemies[i].hit_box = self.enemies[i].hit_box.move(0,amount)
             if type(self.enemies[i]) == Flyer:
@@ -251,6 +353,21 @@ class Map(pygame.sprite.Sprite):
 
     def add_square(self,y=500,width=150,height=150):
         last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.insert(len(self.blocks)-1,block)
+
+    def add_square(self,y=500,width=150,height=150):
+        last_block = self.blocks[-1]
+        x = last_block.x + last_block.w
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.insert(len(self.blocks)-1,block)
+
+    def add_square_bump(self,y=500,width=85,height=125):
+        last_block = self.blocks[len(self.blocks)-2]
+        x = last_block.x - width
+        block = pygame.Rect(x,y,width,height)
+        self.blocks.insert(len(self.blocks)-1,block)
         x = last_block.x + last_block.w
         block = pygame.Rect(x,y,width,height)
         self.blocks.insert(len(self.blocks)-1,block)
@@ -298,6 +415,26 @@ class Map(pygame.sprite.Sprite):
         block = pygame.Rect(x,y,width,height)
         self.blocks.append(block)
 
+    def add_door_lock(self,width=142,height=195):
+        last_block = self.blocks[-1]
+        x = last_block.x
+        y = last_block.y-height
+        block = pygame.Rect(x,y,width,height)
+        self.doors.append(block)
+        block = pygame.Rect(x,0,last_block.w,y)
+        self.blocks.insert(len(self.blocks)-1,block)
+
+    def add_door_drop(self,width=142,height=195):
+        last_block = self.blocks[-1]
+        x = last_block.x
+        y = -200
+        block = pygame.Rect(x,y,width,height)
+        self.doors.append(block)
+        block = pygame.Rect(x-100,y-100,100,100)
+        self.blocks.insert(len(self.blocks)-1,block)
+        block = pygame.Rect(x+width,y-100,100,100)
+        self.blocks.insert(len(self.blocks)-1,block)
+
     def add_spikes(self,x,y,width=85,height=30):
         spikes = Obstacle(width,height,(x,y),'spikes')
         self.obstacles.append(spikes)
@@ -310,14 +447,18 @@ class Map(pygame.sprite.Sprite):
         enemy = Enemy(x,y,width,height,'basic',3)
         self.enemies.append(enemy)
 
-    def add_jump_enemy(self,x,y,width=85,height=125):
-        enemy = Enemy(x,y,width,height,'jump',0,18)
+    def add_jump_enemy(self,x,y,width=85,height=125,v=18):
+        enemy = Enemy(x,y,width,height,'jump',0,v)
         self.enemies.append(enemy)
 
     def add_elite(self,x,y,width=85,height=125):
         enemy = Elite(x,y,width,height)
         self.enemies.append(enemy)
 
-    def add_flyer(self,points,speed,width=85,height=85):
-        enemy_fly = Flyer(points,width,height,speed)
+    def add_flyer(self,points,speed,shooting=False,width=85,height=85):
+        enemy_fly = Flyer(points,width,height,speed,shooting)
         self.enemies.append(enemy_fly)
+
+    def add_boss(self,x,y,width=128,height=188):
+        enemy = Boss(x,y,width,height)
+        self.enemies.append(enemy)

@@ -16,6 +16,7 @@ class Map(pygame.sprite.Sprite):
         self.death_box = pygame.Rect(-1000,self.size[1],50000,50)
         self.blocks = [self.death_box]
         self.enemies = []
+        self.bullet = []
         self.obstacles = []
         self.make_level()
 

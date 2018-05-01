@@ -70,6 +70,7 @@ class Flyer(object):
 
     def collision(self,map,game_over,player):
         g=0
+        
 class shoot(object):
     def __init__(self,player,Flyer):
         self.x = Flyer.hit_box.x
