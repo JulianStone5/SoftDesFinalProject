@@ -18,7 +18,9 @@ class Model(object):
 
     def collision(self):
         vscroll = False
-        scroll_prop = 1/8
+        scroll_prop = 1/4
+        if self.map.level % 2 == 0:
+            scroll_prop = 1/6
         if self.player.hit_box.y < self.size[1]*scroll_prop and self.player.vy < 0 and not self.game_over:
             vscroll = True
             self.map.vert_scroll(-1*self.player.vy)
@@ -31,6 +33,8 @@ class Model(object):
                     self.map.vert_scroll(self.size[1]-self.map.blocks[0].y)
         self.game_over, self.map.levelChanged = self.player.collision(self.map,self.game_over,self.player,vscroll)
         for i in self.map.enemies:
+            if self.game_over:
+                break
             if type(i) != Flyer:
                 i.collision(self.map,self.game_over,self.player)
             if type(i) == Flyer:
@@ -43,7 +47,7 @@ class Model(object):
                 if self.player.attacking:
                     i.lives -= 1
                     if i.lives == 0:
-                        if type(i) == Elite:
+                        if type(i) == Elite or type(i) == Boss:
                             self.map.doors.pop(0)
                         self.map.enemies.remove(i)
                     self.player.attacking = False
@@ -52,9 +56,20 @@ class Model(object):
                 self.game_over = True
                 break
             if type(i) == Elite or type(i) == Boss:
+                if type(i) == Boss:
+                    fire = i.shoot(self.player)
+                    if fire is not None:
+                        self.map.bullet.append(fire)
                 if i.attacking and (self.player.hit_box.colliderect(i.att_box) or self.player.hit_box.colliderect(i.hit_box)):
                     self.game_over = True
                     break
+
+        things = self.map.blocks + self.map.doors
+        for j in things:
+            for i in self.map.bullet:
+                if i.hit_box.colliderect(j):
+                    self.map.bullet.remove(i)
+
         for i in self.map.bullet:
             i.update_bullet()
             if i.hit_box.colliderect(self.player.hit_box):
@@ -69,7 +84,7 @@ class PyGameWindowView(object):
         self.model = model
         self.size = size
 
-    def draw(self,graphics):
+    def draw(self,graphics,font,tut_font):
         window = pygame.Rect(0,0,self.size[0],self.size[1])
         self.screen.fill((0,0,0))
         for i in self.model.map.blocks:
@@ -85,6 +100,8 @@ class PyGameWindowView(object):
 
         for i in self.model.map.bullet:
             FI = graphics.get('FI',0)
+            if i.hit_box.w != 20:
+                FI = graphics.get('FIB',0)
             self.screen.blit(FI,(i.hit_box.x,i.hit_box.y),(0,0,i.hit_box.w,i.hit_box.h))
 
         for i in self.model.map.doors:
@@ -102,6 +119,8 @@ class PyGameWindowView(object):
                     B = graphics.get('B',0)
                     if type(i) == Flyer:
                         B = graphics.get('F',0)
+                    elif i.type == 'jump':
+                        B = graphics.get('J',0)
                     if not i.mov_right:
                         B = pygame.transform.flip(B,True,False)
                     self.screen.blit(B,(i.hit_box.x,i.hit_box.y),(0,0,i.hit_box.w,i.hit_box.h))
@@ -125,33 +144,35 @@ class PyGameWindowView(object):
                                 x -= 25
                                 extra = 75
                         self.screen.blit(normalAtt,(x,i.hit_box.y),(0,0,i.att_box.x+i.att_box.w,i.hit_box.h))
+                    total = 3
+                    if type(i) == Boss:
+                        total = 5;
+                    health = pygame.Rect(i.hit_box.x,i.hit_box.y-20,i.hit_box.w*i.lives/total,7)
+                    border = pygame.Rect(i.hit_box.x-1,i.hit_box.y-21,i.hit_box.w*i.lives/total+2,9)
+                    pygame.draw.rect(self.screen, (255,255,255),border)
+                    pygame.draw.rect(self.screen, (255,0,0),health)
 
-        tut_font = pygame.font.Font("freesansbold.ttf",25)
         if self.model.map.level == 1:
             for i in self.model.map.tutorial:
                 t = tut_font.render(i[2],True,(255,255,255))
                 self.screen.blit(t,(i[0],i[1]))
 
-        x = self.model.player.hit_box.x
+        x = self.model.player.hit_box.x-12
         y = self.model.player.hit_box.y
-        w = self.model.player.hit_box.w
-        h = self.model.player.hit_box.h
         P = graphics.get('P',0)
         PA = graphics.get('PA',0)
         if not self.model.player.mov_right:
             P = pygame.transform.flip(P,True,False)
             PA = pygame.transform.flip(PA,True,False)
-
-
         if self.model.player.att_animation:
             if not self.model.player.mov_right:
                 x -= 50
-            self.screen.blit(PA,(x,y),(0,0,w+50,h))
+            self.screen.blit(PA,(x,y),(0,0,135,125))
         else:
-            self.screen.blit(P,(x,y),(0,0,w,h))
+            self.screen.blit(P,(x,y),(0,0,85,125))
 
         if self.model.game_over:
-            game_over_font = pygame.font.Font("freesansbold.ttf",50)
+            game_over_font = pygame.font.Font(font,50)
             game_over = game_over_font.render("GAME OVER",True,(255,0,0))
             restart = game_over_font.render('PRESS "ENTER" TO RESTART',True,(255,0,0))
             self.screen.blit(game_over, (self.size[0]//2-game_over.get_width()//2,
@@ -160,12 +181,15 @@ class PyGameWindowView(object):
 
         pygame.display.update()
 
-    def story(self,text,graphics):
+    def story(self,text,graphics,font):
         self.screen.fill((0,0,0))
         N = graphics.get('N',0)
         C = graphics.get('C',0)
-        story = pygame.font.Font("freesansbold.ttf",50)
-        begin = pygame.font.Font("freesansbold.ttf",30)
+        CE = graphics.get('CE',0)
+        P = graphics.get('P',0)
+        story = pygame.font.Font(font,45)
+        begin = pygame.font.Font(font,30)
+        end = pygame.font.Font(font,40)
         start = False
         if self.model.map.level == 0:
             self.screen.blit(N,((self.size[0]-N.get_width())//2,(self.size[1]-N.get_height())//2-400))
@@ -179,18 +203,28 @@ class PyGameWindowView(object):
                     if event.type == KEYDOWN and event.key == pygame.K_RETURN:
                         start = True
         self.screen.fill((0,0,0))
+        self.model.map.levelChanged = False
         start = False
         for i in range(len(text)):
             start = self.fade_in(story, text[i],10+i*400,10+i*300) or start
-        start = self.fade_in(begin, 'Press ENTER to continue',1400,975) or start
+        start = self.fade_in(begin, 'Press ENTER to continue',x=1400,y=975) or start
         while not start:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                 if event.type == KEYDOWN and event.key == pygame.K_RETURN:
                     start = True
+        if self.model.map.level == 4:
+            self.model.map.levelChanged = False
+            self.screen.fill((0,0,0))
+            self.screen.blit(N,((self.size[0]-N.get_width())//2,(self.size[1]-N.get_height())//2-400))
+            self.screen.blit(CE,((self.size[0]-CE.get_width())//2,(self.size[1]-CE.get_height())//2))
+            # P = pygame.transform.scale(P,(P.get_width()//2,P.get_height()//2))
+            self.screen.blit(P,((self.size[0]-CE.get_width())//2-100,(self.size[1]-CE.get_height())//2+CE.get_height()-P.get_height()))
+            pygame.display.update()
+            start = self.fade_in(end, 'The End',centered=True,t=.05)
 
-    def fade_in(self,f,text,x=10,y=10,color=(255,255,255),centered=False):
+    def fade_in(self,f,text,x=10,y=10,color=(255,255,255),centered=False,t=.05):
         p = f.render(text,True,color)
         if centered:
             x = self.size[0]//2-p.get_width()//2
@@ -208,7 +242,7 @@ class PyGameWindowView(object):
             surf.set_alpha(i)
             self.screen.blit(surf, (x,y))
             pygame.display.flip()
-            time.sleep(.025)
+            time.sleep(t)
             pygame.display.update()
         return False
 
@@ -221,6 +255,8 @@ class PyGameKeyboardController(object):
 
     def handle_movement(self):
         keys = pygame.key.get_pressed()
+        if self.model.game_over:
+            return
         if not keys[pygame.K_w] and not keys[pygame.K_UP]:
             self.up_uncl = True # Verifies that the jump key has been unclicked
         if not keys[pygame.K_SPACE]:
@@ -256,7 +292,7 @@ class PyGameKeyboardController(object):
                 self.model.player.attacking = False
         t_since_last = time.time() - self.model.t_last
         if keys[pygame.K_SPACE]:
-            if not self.model.player.attacking and self.att_uncl and t_since_last > .4:
+            if not self.model.player.attacking and self.att_uncl and t_since_last > .25:
                 self.model.t_att = time.time()
                 self.model.player.attacking = True
                 self.model.player.att_animation = True
@@ -275,6 +311,11 @@ def generate_graphics():
     C.blit(castle,(0,0))
     C = pygame.transform.scale(C,(2*C.get_width()//3,2*C.get_height()//3))
     graphics['C'] = C
+    castleEnd = pygame.image.load("images/castleLight.png").convert_alpha()
+    CE = pygame.Surface(castleEnd.get_size(), pygame.SRCALPHA, 32)
+    CE.blit(castleEnd,(0,0))
+    CE = pygame.transform.scale(CE,(2*CE.get_width()//3,2*CE.get_height()//3))
+    graphics['CE'] = CE
     stone = pygame.image.load("images/stone.png").convert_alpha()
     S = pygame.Surface(stone.get_size(), pygame.SRCALPHA, 32)
     S.blit(stone,(0,0))
@@ -283,13 +324,13 @@ def generate_graphics():
     P = pygame.Surface(p.get_size(), pygame.SRCALPHA, 32)
     P.set_alpha(0)
     P.blit(p,(0,0))
-    P = pygame.transform.scale(P,(player.hit_box.w,player.hit_box.h))
+    P = pygame.transform.scale(P,(85,125))
     graphics['P'] = P
     pa = pygame.image.load("images/playerAttack.png").convert_alpha()
     PA = pygame.Surface(pa.get_size(), pygame.SRCALPHA, 32)
     PA.set_alpha(0)
     PA.blit(pa,(0,0))
-    PA = pygame.transform.scale(PA,(player.hit_box.w+50,player.hit_box.h))
+    PA = pygame.transform.scale(PA,(135,125))
     graphics['PA'] = PA
     b = pygame.image.load("images/basic.png").convert_alpha()
     B = pygame.Surface(b.get_size(), pygame.SRCALPHA, 32)
@@ -298,6 +339,12 @@ def generate_graphics():
     B = pygame.transform.scale(B,(85,125))
     B = pygame.transform.flip(B,True,False)
     graphics['B'] = B
+    j = pygame.image.load("images/jumper.png").convert_alpha()
+    J = pygame.Surface(j.get_size(), pygame.SRCALPHA, 32)
+    J.set_alpha(0)
+    J.blit(j,(0,0))
+    J = pygame.transform.scale(J,(85,125))
+    graphics['J'] = J
     f = pygame.image.load("images/flyer.png").convert_alpha()
     F = pygame.Surface(f.get_size(), pygame.SRCALPHA, 32)
     F.set_alpha(0)
@@ -336,6 +383,8 @@ def generate_graphics():
     FI.blit(fi,(0,0))
     FI = pygame.transform.scale(FI,(20,20))
     graphics['FI'] = FI
+    FIB = pygame.transform.scale(FI,(40,40))
+    graphics['FIB'] = FIB
     d = pygame.image.load("images/door.png").convert_alpha()
     D = pygame.Surface(d.get_size(), pygame.SRCALPHA, 32)
     D.blit(d,(0,0))
@@ -351,7 +400,7 @@ if __name__ == '__main__':
     size = (1860,1020)
 
     mmap = Map(size)
-    player = Player(0,680,85,125)
+    player = Player(0,680,70,125)
     model = Model(size,player,mmap)
     view = PyGameWindowView(size,model)
     controller = PyGameKeyboardController(model)
@@ -360,20 +409,31 @@ if __name__ == '__main__':
     running = True
     graphics = generate_graphics()
 
+    story_font = os.path.join(os.path.dirname(os.path.realpath(__file__)),'BlackwoodCastle.ttf')
+    tut_font = pygame.font.Font(story_font,25)
+
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
             if (model.game_over or mmap.level == 0) and event.type == KEYDOWN and event.key == pygame.K_RETURN:
-                player = Player(0,680,85,125)
+                player = Player(0,680,70,125)
                 mmap = Map(size,mmap.level)
                 mmap.levelChanged = True
                 model = Model(size,player,mmap)
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
         if not mmap.levelChanged:
-            view.story(mmap.story_text[mmap.level],graphics)
+            if mmap.level == 3:
+                pygame.mixer.music.load('track1.mp3')
+                pygame.mixer.music.play(-1)
+            if mmap.level == 4:
+                pygame.mixer.music.load('DarkCastleOpen.wav')
+                pygame.mixer.music.play(-1)
+            view.story(mmap.story_text[mmap.level],graphics,story_font)
             mmap.level += 1
+            if mmap.level == 5:
+                break
             mmap.make_level()
             mmap.levelChanged = True
             player.hit_box.x = 0
@@ -382,7 +442,12 @@ if __name__ == '__main__':
             controller.handle_movement()
             model.collision()
         if mmap.level != 0:
-            view.draw(graphics)
+            view.draw(graphics,story_font,tut_font)
         time.sleep(.001)
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
 
     pygame.quit()
