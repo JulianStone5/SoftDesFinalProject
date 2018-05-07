@@ -84,6 +84,14 @@ class Player(object):
         if not vscroll:
             self.hit_box.y += self.vy # pos[1] to y becasue syntax
         self.vy += self.gravity
+        if self.vy > 10: #Terminal velocity
+            self.vy = 10
+        if game_over: #Stops collision detection for player when game is over
+            self.jump1 = True
+            self.jump2 = True
+            self.vx = 0
+            self.attacking = False
+            return True, True
         if not self.is_main and (self.type != 'elite' and self.type != 'boss'):
             self.hit_box = self.hit_box.move(self.vx,0) #So enemies can move without keypress
         elif not self.is_main:
@@ -94,20 +102,17 @@ class Player(object):
                 dist = player.hit_box.x-self.hit_box.x+self.hit_box.w
             if dist < self.prox:
                 self.follow(player)
-                self.attack()
+                chance = .005
+                cooldown = .6
+                if self.type == 'boss':
+                    cooldown = 1.25
+                self.attack(cooldown,chance)
             if self.type == 'boss':
                 self.jump()
-        if self.vy > 10: #Terminal velocity
-            self.vy = 10
-        if game_over: #Stops collision detection for player when game is over
-            self.jump1 = True
-            self.jump2 = True
-            self.vx = 0
-            self.attacking = False
-            return True, True
         i = mmap.blocks[-1]
-        if self.is_main and self.hit_box.x>i.x+i.w-self.hit_box.w:
-            return False, False
+        if self.is_main and self.hit_box.x>i.x+i.w-self.hit_box.w-25:
+            if self.hit_box.y < i.y and self.hit_box.y > i.y-200:
+                return False, False
         # Make all key points
         p1 = self.hit_box.topleft
         p4 = self.hit_box.topright
@@ -138,7 +143,7 @@ class Player(object):
                 self.bottom_collision(i,p9,p10,p11,p12)
         self.att_box.y = self.hit_box.y+self.hit_box.h//2+17
         if self.mov_right:
-            self.att_box.x = self.hit_box.x+self.hit_box.w
+            self.att_box.x = self.hit_box.x+self.hit_box.w+12
         else:
-            self.att_box.x = self.hit_box.x-self.att_box.w
+            self.att_box.x = self.hit_box.x-self.att_box.w-12
         return False, True
