@@ -8,6 +8,12 @@ import math
 class Enemy(Player):
 
     def __init__(self,x,y,width,height,ty='',VstartX=0,VstartY=0,lives=1):
+        """
+        This class is what it's called to work are basic enemies. From this
+        class you can make two types of enemies by specifying the type. One will
+        move side to side between two walls while you can set another type to
+        just jump up in the air.
+        """
         super(Enemy,self).__init__(x,y,width,height,False)
         self.type = ty
         self.lives = lives
@@ -27,6 +33,13 @@ class Elite(Enemy):
         self.prox = 1000
 
     def follow(self, player):
+        """
+        This method allows the elite the follow the player. This method states
+        that if the player is to the right of the elite the elite will move to
+        the right. This will happen the same if the players to the left. Also
+        when the elite gets close enough to the player delete. Approaching the
+        player so that the they don't merge together.
+        """
         if self.hit_box.x > player.hit_box.x+player.hit_box.w:
             self.hit_box = self.hit_box.move(-self.vx,0)
             self.mov_right = False
@@ -35,6 +48,11 @@ class Elite(Enemy):
             self.mov_right = True
 
     def attack(self,cooldown=.6,chance=.005):
+        """
+        This is the elites attack method. If the players within proximity the
+        method will trigger on pseudo-random chance. With a tiny cool down to
+        make it fair.
+        """
         t_since_att = time.time()-self.t_att
         if t_since_att >.25:
             self.att_animation = False
@@ -64,6 +82,12 @@ class Flyer(object):
         self.st = st
 
     def Fly_movement(self):
+        """
+        This method dictates how the flyer moves between four points. It takes
+        into points figures out the line and moves the image along that line
+        segment till it reaches the corner and then it changes directions. This
+        will allow the flyer to move in a rectangle.
+        """
         num = len(self.points)
         if self.points[self.i][0] == self.points[(self.i+1) % num][0] and self.points[self.i][1] < self.points[(self.i+1) % num][1]: # down
             if self.hit_box.y > self.points[(self.i+1) % num][1]:
@@ -109,6 +133,10 @@ class shoot(object):
         self.Vy = round(self.v*(self.b/self.z))
 
     def update_bullet(self):
+        """
+        This updates the bullet and sent it towards the position of the player
+        when the bullet was created.
+        """
         self.hit_box = self.hit_box.move(self.Vx,self.Vy)
         #self.hit_box = self.hit_box.move(4,0)
 
@@ -121,6 +149,11 @@ class Boss(Elite):
         self.t = time.time()
 
     def jump(self):
+        """
+        This is a jump method has the boss jump randomly within a given time
+        interval. But also make sure that the boss doesn't jump while it's still
+        in midair.
+        """
         if abs(self.vy) < .25 and not self.jump1:
             r = random.random()
             if r < .025:
@@ -128,6 +161,10 @@ class Boss(Elite):
                 self.jump1 = True
 
     def shoot(self,player):
+        """
+        This allows the boss to fire projectiles from the shoot class at the
+        player just like flyer.
+        """
         if time.time() - self.t > 1.25:
             dist = 0
             if self.hit_box.x > player.hit_box.x+player.hit_box.w:

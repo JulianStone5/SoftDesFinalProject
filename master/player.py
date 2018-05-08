@@ -18,12 +18,24 @@ class Player(object):
         self.mov_right = True
 
     def top_collision(self,i,p1,p2,p3,p4):
+        """
+        This takes in a block from the map and four points on the player's hit box
+        and uses them to see if the player is colliding with something above them.
+        If so, set the player's velocity to be downwards.
+        """
         if ((i.collidepoint(p1) and i.collidepoint(p2)) or # Collision on the top
             (i.collidepoint(p3) and i.collidepoint(p4)) and self.vy < 0):
             self.hit_box.y = i.y + i.h
             self.vy = 1
 
     def bottom_collision(self,i,p9,p10,p11,p12):
+        """
+        This takes in a block from the map and four points on the player's hit box
+        and uses them to see if the player is colliding with something below them.
+        If so, set the player's velocity to be zero and reset any jump counters
+        that were activated. If this isn't the player (the jumping enemy), reset
+        the vertical velocity to be upwards.
+        """
         if ((i.collidepoint(p9) and i.collidepoint(p10)) or # Collision on the bottom
             (i.collidepoint(p11) and i.collidepoint(p12)) and self.vy > 0):
             self.hit_box.y = i.y - self.hit_box.h
@@ -35,6 +47,11 @@ class Player(object):
             self.jump2 = False
 
     def right_collision(self,i,p4,p6,p8,p12,p15,p16):
+        """
+        This takes in a block from the map and four points on the player's hit box
+        and uses them to see if the player is colliding with something to the right
+        of them. If this isn't a player (a basic enemy) turn the enemy around.
+        """
         if ((i.collidepoint(p4) and i.collidepoint(p6)) or # Collision on the right
             (i.collidepoint(p8) and i.collidepoint(p12)) or
             i.collidepoint(p15) or i.collidepoint(p16)):
@@ -45,6 +62,11 @@ class Player(object):
                     self.mov_right = False
 
     def left_collision(self,i,p1,p5,p7,p9,p13,p14):
+        """
+        This takes in a block from the map and four points on the player's hit box
+        and uses them to see if the player is colliding with something to the left
+        of them. If this isn't a player (a basic enemy) turn the enemy around.
+        """
         if ((i.collidepoint(p1) and i.collidepoint(p5)) or # Collision on the left
             (i.collidepoint(p7) and i.collidepoint(p9)) or
             i.collidepoint(p13) or i.collidepoint(p14)):

@@ -31,6 +31,10 @@ class Map(object):
         self.make_level()
 
     def level1(self):
+        """
+        This method erases the current layout of the map and recreates it to be
+        the layout we designed for level 1. This includes the locations for enemies.
+        """
         self.death_box = pygame.Rect(-1000,self.size[1],50000,50)
         self.starter_block = pygame.Rect(0,935,320,85)
         self.blocks = [self.death_box,self.starter_block]
@@ -79,6 +83,10 @@ class Map(object):
         self.add_wide_floating_up_block()
 
     def level2(self):
+        """
+        This method erases the current layout of the map and recreates it to be
+        the layout we designed for level 2. This includes the locations for enemies.
+        """
         self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
         self.ceiling_box = pygame.Rect(-200,-100,10000-120,200)
         self.starter_block = pygame.Rect(0,935,320,85)
@@ -206,6 +214,10 @@ class Map(object):
         self.add_smaller_block()
 
     def level3(self):
+        """
+        This method erases the current layout of the map and recreates it to be
+        the layout we designed for level 3. This includes the locations for enemies.
+        """
         self.death_box = pygame.Rect(-1000,self.size[1],1000000,50)
         self.starter_block = pygame.Rect(0,935,320,85)
         self.blocks = [self.death_box,self.starter_block]
@@ -305,6 +317,10 @@ class Map(object):
         self.add_wide_floating_block()
 
     def level4(self):
+        """
+        This method erases the current layout of the map and recreates it to be
+        the layout we designed for level 4. This includes the locations for enemies.
+        """
         self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
         self.death_box = pygame.Rect(-1000,self.size[1],100000,50)
         self.ceiling_box = pygame.Rect(-200,-100,10000-120,200)
@@ -339,6 +355,10 @@ class Map(object):
         self.add_smaller_block()
 
     def make_level(self):
+        """
+        This will create the correct level based on the level that is being
+        tracked by the Map class.
+        """
         if self.level == 1:
             self.level1()
         elif self.level == 2:
@@ -349,6 +369,10 @@ class Map(object):
             self.level4()
 
     def side_scroll(self,amount):
+        """
+        This method takes in a value and translates all objects in the Map class
+        by that amount horizontally.
+        """
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(amount,0)
         for i in range(len(self.bullet)):
@@ -366,6 +390,10 @@ class Map(object):
             self.tutorial[i][0] += amount
 
     def vert_scroll(self,amount):
+        """
+        This method takes in a value and translates all objects in the Map class
+        by that amount vertically.
+        """
         for i in range(len(self.blocks)):
             self.blocks[i] = self.blocks[i].move(0,amount)
         for i in range(len(self.bullet)):
@@ -383,6 +411,13 @@ class Map(object):
             self.tutorial[i][1] += amount
 
     def add_block(self,width=250,height=500):
+        """
+        This method, and the majority of the ones that follow are all used to
+        create the map modularly. This means they use the location of the previous
+        block to make the next one. Each method does a slightly different variant.
+        Some change the height of a normal block. Some make floating blocks and
+        some add small features to existing blocks.
+        """
         last_block = self.blocks[-1]
         x = last_block.x + last_block.w
         y = last_block.y + last_block.h - height
@@ -492,7 +527,7 @@ class Map(object):
     def add_door_drop(self,width=142,height=195):
         last_block = self.blocks[-1]
         x = last_block.x
-        y = -200
+        y = -500
         block = pygame.Rect(x,y,width,height)
         self.doors.append(block)
         block = pygame.Rect(x-100,y-100,100,100)
@@ -501,21 +536,45 @@ class Map(object):
         self.blocks.insert(len(self.blocks)-1,block)
 
     def add_basic_enemy(self,x,y,width=85,height=125):
+        """
+        This method creates a basic enemy that can move horizontally. It takes
+        in an x and a y coordinate used to give the enemy the starting position.
+        """
         enemy = Enemy(x,y,width,height,'basic',3)
         self.enemies.append(enemy)
 
     def add_jump_enemy(self,x,y,width=85,height=125,v=18):
+        """
+        This method creates a basic enemy that can move vertically. It takes
+        in an x and a y coordinate used to give the enemy the starting position.
+        """
         enemy = Enemy(x,y,width,height,'jump',0,v)
         self.enemies.append(enemy)
 
     def add_elite(self,x,y,width=85,height=125):
+        """
+        This method creates an elite enemy. It takes in an x and a y coordinate
+        used to give the enemy the starting position.
+        """
         enemy = Elite(x,y,width,height)
         self.enemies.append(enemy)
 
     def add_flyer(self,points,speed,shooting=False,st=2,width=85,height=85):
+        """
+        This method creates a flyer enemy. In order to do this, it needs a set
+        of points given as a list of lists. There must be an even number of points
+        and the points need to be directly horizontal/vertical to one another.
+        In other words, flyers can fly in horizontal lines, vertical lines, or
+        rectangles. This can take a boolean saying whether this flyer can shoot.
+        It also can take another parameter that defines how often the flyer shoots.
+        """
         enemy_fly = Flyer(points,width,height,speed,shooting,st)
         self.enemies.append(enemy_fly)
 
     def add_boss(self,x,y,width=128,height=188):
+        """
+        This method creates a boss enemy. It takes in an x and a y coordinate
+        used to give the enemy the starting position.
+        """
         enemy = Boss(x,y,width,height)
         self.enemies.append(enemy)

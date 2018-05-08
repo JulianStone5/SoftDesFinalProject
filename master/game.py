@@ -17,6 +17,12 @@ class Model(object):
         self.t_last = time.time()
 
     def collision(self):
+        """
+        This collision method goes through all of the possible collisions that
+        can occur in the game. This means the gravity/mao based collisions and
+        the collisions between the player and the enemies. It also sees if the
+        player or enemies are attacking and if that will alter the game's state.
+        """
         vscroll = False
         scroll_prop = 1/4
         if self.map.level % 2 == 0:
@@ -85,6 +91,11 @@ class PyGameWindowView(object):
         self.size = size
 
     def draw(self,graphics,font,tut_font):
+        """
+        This takes in a dictionary of images and a few fonts and uses them to
+        create the game window. This will draw the player, the map that is in
+        the window's view, and the enemies that are in the window's view.
+        """
         window = pygame.Rect(0,0,self.size[0],self.size[1])
         self.screen.fill((0,0,0))
         for i in self.model.map.blocks:
@@ -182,6 +193,12 @@ class PyGameWindowView(object):
         pygame.display.update()
 
     def story(self,text,graphics,font):
+        """
+        This method takes in a string, a dictionary of images, and a font to
+        create the story panels that occur between the levels of the game. It
+        will display an openning/closing scene depending on the level the player
+        is on.
+        """
         self.screen.fill((0,0,0))
         N = graphics.get('N',0)
         C = graphics.get('C',0)
@@ -225,6 +242,13 @@ class PyGameWindowView(object):
             start = self.fade_in(end, 'The End',centered=True,t=.05)
 
     def fade_in(self,f,text,x=10,y=10,color=(255,255,255),centered=False,t=.05):
+        """
+        This requires a font, a string, and allows for coordinates, a color (tuple),
+        a boolean, and a time in seconds. It will use this information to create
+        fade-in text on the screen. The coordinates can define where, the color
+        can define the text's color, the boolean can center the text on the
+        screen, and the time will alter the fade-in speed.
+        """
         p = f.render(text,True,color)
         if centered:
             x = self.size[0]//2-p.get_width()//2
@@ -254,6 +278,12 @@ class PyGameKeyboardController(object):
         self.att_uncl = True
 
     def handle_movement(self):
+        """
+        This method handles all of the player input to the game during play.
+        It allows ASDW or the arrow keys to control movement. It has SPACE work
+        as the attack button. It also enacts a cooldown on the attack so it isn't
+        spammed.
+        """
         keys = pygame.key.get_pressed()
         if self.model.game_over:
             return
@@ -300,6 +330,11 @@ class PyGameKeyboardController(object):
 
 
 def generate_graphics():
+    """
+    This acts as a centralized place to load in the graphics for the game. It
+    loads them all in, puts them in their own PyGame surfaces, scales them as
+    needed, puts the surfaces into a dictionary, and returns the dictionary.
+    """
     graphics = {}
     name = pygame.image.load("images/dark_castle.png").convert_alpha()
     N = pygame.Surface(name.get_size(), pygame.SRCALPHA, 32)
