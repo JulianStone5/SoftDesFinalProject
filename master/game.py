@@ -430,7 +430,7 @@ def generate_graphics():
 if __name__ == '__main__':
     pygame.init()
     pygame.mixer.init()
-    pygame.mixer.music.load('music/DarkCastleOpen.wav')
+    pygame.mixer.music.load('music/DarkCastleLevelOne.wav')
     pygame.mixer.music.play(-1)
     size = (1860,1020)
 
@@ -459,12 +459,15 @@ if __name__ == '__main__':
                 view = PyGameWindowView(size,model)
                 controller = PyGameKeyboardController(model)
         if not mmap.levelChanged:
+            if mmap.level == 1:
+                pygame.mixer.music.load('music/DarkCastleLevelTwo.mp3')
+            if mmap.level == 2:
+                pygame.mixer.music.load('music/DarkCastleLevelThree.mp3')
             if mmap.level == 3:
-                pygame.mixer.music.load('music/track1.mp3')
-                pygame.mixer.music.play(-1)
+                pygame.mixer.music.load('music/DarkCastleLevelFour.mp3')
             if mmap.level == 4:
-                pygame.mixer.music.load('music/DarkCastleOpen.wav')
-                pygame.mixer.music.play(-1)
+                pygame.mixer.music.load('music/DarkCastleLevelOne.wav')
+            pygame.mixer.music.play(-1)
             view.story(mmap.story_text[mmap.level],graphics,story_font)
             mmap.level += 1
             if mmap.level == 5:
