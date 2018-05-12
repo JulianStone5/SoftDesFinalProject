@@ -59,9 +59,10 @@ class Model(object):
                     self.player.attacking = False
                     self.t_last = time.time()
             if self.player.hit_box.colliderect(i.hit_box) and type(i) != Elite and type(i) != Boss and not self.game_over:
-                self.game_over = True
-                break
-            if type(i) == Elite or type(i) == Boss:
+                if i in self.map.enemies:
+                    self.game_over = True
+                    break
+            elif type(i) == Elite or type(i) == Boss and i in self.map.enemies:
                 if type(i) == Boss:
                     fire = i.shoot(self.player)
                     if fire is not None:

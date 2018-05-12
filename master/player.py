@@ -125,9 +125,9 @@ class Player(object):
             if dist < self.prox:
                 self.follow(player)
                 chance = .005
-                cooldown = .6
+                cooldown = .75
                 if self.type == 'boss':
-                    cooldown = 1.25
+                    cooldown = 1.35
                 self.attack(cooldown,chance)
             if self.type == 'boss':
                 self.jump()
