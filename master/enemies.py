@@ -47,7 +47,7 @@ class Elite(Enemy):
             self.hit_box = self.hit_box.move(self.vx,0)
             self.mov_right = True
 
-    def attack(self,cooldown=.6,chance=.005):
+    def attack(self,cooldown=.75,chance=.005):
         """
         This is the elites attack method. If the players within proximity the
         method will trigger on pseudo-random chance. With a tiny cool down to
