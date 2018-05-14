@@ -127,7 +127,7 @@ class Player(object):
                 chance = .005
                 cooldown = .75
                 if self.type == 'boss':
-                    cooldown = 1.35
+                    cooldown = 1.25
                 self.attack(cooldown,chance)
             if self.type == 'boss':
                 self.jump()

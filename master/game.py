@@ -428,11 +428,57 @@ def generate_graphics():
     graphics['D'] = D
     return graphics
 
+def run_game(running,player,mmap,model,view,controller,graphics):
+    story_font = os.path.join(os.path.dirname(os.path.realpath(__file__)),'fonts/BlackwoodCastle.ttf')
+    tut_font = pygame.font.Font(story_font,25)
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+            if (model.game_over or mmap.level == 0) and event.type == KEYDOWN and event.key == pygame.K_RETURN:
+                player = Player(0,680,70,125)
+                mmap = Map(size,mmap.level)
+                mmap.levelChanged = True
+                model = Model(size,player,mmap)
+                view = PyGameWindowView(size,model)
+                controller = PyGameKeyboardController(model)
+            if event.type == KEYDOWN and event.key == pygame.K_p:
+                player = Player(0,680,70,125)
+                mmap = Map(size)
+                model = Model(size,player,mmap)
+                view = PyGameWindowView(size,model)
+                controller = PyGameKeyboardController(model)
+        if not mmap.levelChanged:
+            if mmap.level != 1:
+                pygame.mixer.music.load('music/DarkCastleLevelOne.wav')
+                pygame.mixer.music.play(-1)
+            view.story(mmap.story_text[mmap.level],graphics,story_font)
+            mmap.level += 1
+            if mmap.level == 2:
+                pygame.mixer.music.load('music/DarkCastleLevelTwo.mp3')
+            if mmap.level == 3:
+                pygame.mixer.music.load('music/DarkCastleLevelThree.mp3')
+            if mmap.level == 4:
+                pygame.mixer.music.load('music/DarkCastleLevelFour.mp3')
+            if mmap.level == 5:
+                break
+            if mmap.level != 1:
+                pygame.mixer.music.play(-1)
+            mmap.make_level()
+            mmap.levelChanged = True
+            player.hit_box.x = 0
+            player.hit_box.y = 680
+        elif player.hit_box.y < size[1] or not model.game_over:
+            controller.handle_movement()
+            model.collision()
+        if mmap.level != 0:
+            view.draw(graphics,story_font,tut_font)
+        time.sleep(.001)
+    return running
+
 if __name__ == '__main__':
     pygame.init()
     pygame.mixer.init()
-    pygame.mixer.music.load('music/DarkCastleLevelOne.wav')
-    pygame.mixer.music.play(-1)
     size = (1860,1020)
 
     mmap = Map(size)
@@ -448,45 +494,18 @@ if __name__ == '__main__':
     story_font = os.path.join(os.path.dirname(os.path.realpath(__file__)),'fonts/BlackwoodCastle.ttf')
     tut_font = pygame.font.Font(story_font,25)
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-            if (model.game_over or mmap.level == 0) and event.type == KEYDOWN and event.key == pygame.K_RETURN:
-                player = Player(0,680,70,125)
-                mmap = Map(size,mmap.level)
-                mmap.levelChanged = True
-                model = Model(size,player,mmap)
-                view = PyGameWindowView(size,model)
-                controller = PyGameKeyboardController(model)
-        if not mmap.levelChanged:
-            if mmap.level == 1:
-                pygame.mixer.music.load('music/DarkCastleLevelTwo.mp3')
-            if mmap.level == 2:
-                pygame.mixer.music.load('music/DarkCastleLevelThree.mp3')
-            if mmap.level == 3:
-                pygame.mixer.music.load('music/DarkCastleLevelFour.mp3')
-            if mmap.level == 4:
-                pygame.mixer.music.load('music/DarkCastleLevelOne.wav')
-            pygame.mixer.music.play(-1)
-            view.story(mmap.story_text[mmap.level],graphics,story_font)
-            mmap.level += 1
-            if mmap.level == 5:
-                break
-            mmap.make_level()
-            mmap.levelChanged = True
-            player.hit_box.x = 0
-            player.hit_box.y = 680
-        elif player.hit_box.y < size[1] or not model.game_over:
-            controller.handle_movement()
-            model.collision()
-        if mmap.level != 0:
-            view.draw(graphics,story_font,tut_font)
-        time.sleep(.001)
+    running = run_game(running,player,mmap,model,view,controller,graphics)
 
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
+            if event.type == KEYDOWN and event.key == pygame.K_p:
+                player = Player(0,680,70,125)
+                mmap = Map(size)
+                model = Model(size,player,mmap)
+                view = PyGameWindowView(size,model)
+                controller = PyGameKeyboardController(model)
+                running = run_game(running,player,mmap,model,view,controller,graphics)
 
     pygame.quit()

@@ -4,7 +4,7 @@ from enemies import *
 
 class Map(object):
 
-    def __init__(self,size,level=2):
+    def __init__(self,size,level=0):
         self.size = size
         self.level = level
         self.levelChanged = False
